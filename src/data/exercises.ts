@@ -6,7 +6,8 @@ export type Slot =
 export type Anim =
   | 'squat' | 'hinge' | 'lunge' | 'pushup' | 'bench' | 'ohp' | 'pulldown' | 'row' | 'bentrow' | 'plank' | 'deadbug'
   | 'bridge' | 'curl' | 'pushdown' | 'raise' | 'calf' | 'legext' | 'legcurl' | 'dip' | 'birddog' | 'march' | 'balance'
-  | 'crunch' | 'fly' | 'legpress' | 'stepup' | 'superman' | 'sideplank';
+  | 'crunch' | 'fly' | 'legpress' | 'stepup' | 'superman' | 'sideplank'
+  | 'catcow' | 'chin_tuck' | 'seated_march' | 'childpose' | 'twist';
 
 export interface Exercise {
   id: string;

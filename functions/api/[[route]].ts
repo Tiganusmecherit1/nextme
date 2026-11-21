@@ -273,7 +273,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
 
     if (path === '/account' && method === 'DELETE') {
       await env.DB.batch(
-        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage'].map((t) =>
+        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage', 'checkins'].map((t) =>
           env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(user.id)
         ).concat([env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id)])
       );
@@ -285,31 +285,33 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       const to = url.searchParams.get('to') || '';
       if (!DATE_RE.test(from) || !DATE_RE.test(to)) return err('bad_range');
       const r = await env.DB.prepare(
-        'SELECT date, water_ml, workout_done, workout_minutes, foods FROM daily_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date'
+        'SELECT date, water_ml, workout_done, workout_minutes, steps, moves, foods FROM daily_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date'
       )
         .bind(user.id, from, to)
         .all<any>();
-      return json({ days: (r.results || []).map((d) => ({ ...d, foods: JSON.parse(d.foods || '[]') })) });
+      return json({ days: (r.results || []).map((d) => ({ ...d, foods: JSON.parse(d.foods || '[]'), moves: JSON.parse(d.moves || '[]') })) });
     }
 
     const dayMatch = path.match(/^\/day\/(\d{4}-\d{2}-\d{2})$/);
     if (dayMatch && method === 'PUT') {
       const date = dayMatch[1];
-      const b = await readJson<{ water_ml?: number; workout_done?: number; workout_minutes?: number; foods?: unknown[] }>(request);
-      const cur = await env.DB.prepare('SELECT water_ml, workout_done, workout_minutes, foods FROM daily_logs WHERE user_id = ? AND date = ?')
+      const b = await readJson<{ water_ml?: number; workout_done?: number; workout_minutes?: number; steps?: number; moves?: unknown[]; foods?: unknown[] }>(request);
+      const cur = await env.DB.prepare('SELECT water_ml, workout_done, workout_minutes, steps, moves, foods FROM daily_logs WHERE user_id = ? AND date = ?')
         .bind(user.id, date)
         .first<any>();
       const water = b.water_ml !== undefined ? Math.max(0, Math.min(10000, Math.round(Number(b.water_ml) || 0))) : cur?.water_ml ?? 0;
       const done = b.workout_done !== undefined ? (b.workout_done ? 1 : 0) : cur?.workout_done ?? 0;
       const mins = b.workout_minutes !== undefined ? Math.max(0, Math.min(600, Math.round(Number(b.workout_minutes) || 0))) : cur?.workout_minutes ?? 0;
+      const steps = b.steps !== undefined ? Math.max(0, Math.min(100000, Math.round(Number(b.steps) || 0))) : cur?.steps ?? 0;
+      const moves = b.moves !== undefined ? JSON.stringify(Array.isArray(b.moves) ? b.moves.slice(0, 40).map((m) => String(m).slice(0, 40)) : []) : cur?.moves ?? '[]';
       const foods = b.foods !== undefined ? JSON.stringify(Array.isArray(b.foods) ? b.foods.slice(0, 60) : []) : cur?.foods ?? '[]';
       if (foods.length > 30000) return err('too_large', 413);
       await env.DB.prepare(
-        'INSERT INTO daily_logs (user_id, date, water_ml, workout_done, workout_minutes, foods) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, date) DO UPDATE SET water_ml = excluded.water_ml, workout_done = excluded.workout_done, workout_minutes = excluded.workout_minutes, foods = excluded.foods'
+        'INSERT INTO daily_logs (user_id, date, water_ml, workout_done, workout_minutes, steps, moves, foods) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, date) DO UPDATE SET water_ml = excluded.water_ml, workout_done = excluded.workout_done, workout_minutes = excluded.workout_minutes, steps = excluded.steps, moves = excluded.moves, foods = excluded.foods'
       )
-        .bind(user.id, date, water, done, mins, foods)
+        .bind(user.id, date, water, done, mins, steps, moves, foods)
         .run();
-      return json({ date, water_ml: water, workout_done: done, workout_minutes: mins, foods: JSON.parse(foods) });
+      return json({ date, water_ml: water, workout_done: done, workout_minutes: mins, steps, moves: JSON.parse(moves), foods: JSON.parse(foods) });
     }
 
     if (path === '/measurements' && method === 'GET') {
@@ -333,6 +335,20 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     const measDel = path.match(/^\/measurements\/(\d+)$/);
     if (measDel && method === 'DELETE') {
       await env.DB.prepare('DELETE FROM measurements WHERE id = ? AND user_id = ?').bind(Number(measDel[1]), user.id).run();
+      return json({ ok: true });
+    }
+
+    if (path === '/checkins' && method === 'GET') {
+      const r = await env.DB.prepare('SELECT id, date, week, answers FROM checkins WHERE user_id = ? ORDER BY date, id').bind(user.id).all<any>();
+      return json({ items: (r.results || []).map((c) => ({ ...c, answers: JSON.parse(c.answers) })) });
+    }
+    if (path === '/checkins' && method === 'POST') {
+      const b = await readJson<any>(request);
+      const answers = Array.isArray(b.answers) ? b.answers.slice(0, 30).map((n: unknown) => Math.max(1, Math.min(5, Math.round(Number(n) || 3)))) : null;
+      if (!answers || answers.length < 10) return err('bad_checkin');
+      await env.DB.prepare('INSERT INTO checkins (user_id, date, week, answers) VALUES (?, ?, ?, ?)')
+        .bind(user.id, DATE_RE.test(b.date) ? b.date : todayUTC(), Math.max(0, Math.min(520, Math.round(Number(b.week) || 0))), JSON.stringify(answers))
+        .run();
       return json({ ok: true });
     }
 

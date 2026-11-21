@@ -1,0 +1,60 @@
+// Quotes with verified or widely documented attributions; translations by NextMe.
+export const QUOTES: { ro: string; en: string; by: string }[] = [
+  { ro: 'Munca grea a făcut totul ușor. Acesta e secretul meu. De aceea câștig.', en: 'Hard work has made it easy. That is my secret. That is why I win.', by: 'Nadia Comăneci' },
+  { ro: 'Nu te ridici la nivelul obiectivelor tale. Cobori la nivelul sistemelor tale.', en: 'You do not rise to the level of your goals. You fall to the level of your systems.', by: 'James Clear, Atomic Habits' },
+  { ro: 'Niciun om nu e limitat.', en: 'No human is limited.', by: 'Eliud Kipchoge' },
+  { ro: 'Călătoria de o mie de mile începe cu un singur pas.', en: 'A journey of a thousand miles begins with a single step.', by: 'Lao Zi, Tao Te Ching 64' },
+  { ro: 'În timp ce amânăm, viața trece în grabă.', en: 'While we are postponing, life speeds by.', by: 'Seneca, Scrisori către Lucilius 1' },
+  { ro: 'Nu mai pierde timpul discutând cum ar trebui să fie un om bun. Fii unul.', en: 'Waste no more time arguing what a good man should be. Be one.', by: 'Marcus Aurelius, Meditații 10.16' },
+  { ro: 'Spune-ți mai întâi ce vrei să fii, apoi fă ce ai de făcut.', en: 'First say to yourself what you would be; and then do what you have to do.', by: 'Epictet, Discursuri 3.23' },
+  { ro: 'Fă ce poți, cu ce ai, acolo unde ești.', en: 'Do what you can, with what you have, where you are.', by: 'Theodore Roosevelt' },
+  { ro: 'Condiția fizică este prima cerință a fericirii.', en: 'Physical fitness is the first requisite of happiness.', by: 'Joseph Pilates, Return to Life' },
+  { ro: 'Am greșit iar și iar în viața mea. Și de aceea reușesc.', en: 'I’ve failed over and over and over again in my life. And that is why I succeed.', by: 'Michael Jordan' },
+  { ro: 'Am urât fiecare minut de antrenament, dar mi-am spus: nu renunța. Suferă acum și trăiește restul vieții ca un campion.', en: 'I hated every minute of training, but I said, don’t quit. Suffer now and live the rest of your life as a champion.', by: 'Muhammad Ali' },
+  { ro: 'Ai grijă de corpul tău. E singurul loc în care trebuie să trăiești.', en: 'Take care of your body. It’s the only place you have to live.', by: 'Jim Rohn' },
+  { ro: 'Nimeni nu e liber dacă nu e stăpân pe sine.', en: 'No man is free who is not master of himself.', by: 'Epictet' },
+  { ro: 'Disciplina e puntea dintre obiective și realizări.', en: 'Discipline is the bridge between goals and accomplishment.', by: 'Jim Rohn' },
+  { ro: 'Fiecare mișcare contează.', en: 'Every move counts.', by: 'Organizația Mondială a Sănătății, 2020' },
+  { ro: 'Avem de ales între durerea disciplinei și durerea regretului.', en: 'We must all suffer one of two things: the pain of discipline or the pain of regret.', by: 'Jim Rohn' },
+  { ro: 'Nu trebuie să fii grozav ca să începi, dar trebuie să începi ca să fii grozav.', en: 'You don’t have to be great to start, but you have to start to be great.', by: 'Zig Ziglar' },
+  { ro: 'Fericirea vieții tale depinde de calitatea gândurilor tale.', en: 'The happiness of your life depends upon the quality of your thoughts.', by: 'Marcus Aurelius' },
+];
+
+// Small, specific daily actions (one per day). Each is grounded in a guideline or study.
+export const DAILY_TIPS: { ro: string; en: string }[] = [
+  { ro: 'Fă 10 minute de mers după prânz. Ajută glicemia de după masă.', en: 'Walk 10 minutes after lunch. It helps post-meal blood sugar.' },
+  { ro: 'Mănâncă întâi legumele și proteina, apoi pâinea sau cartofii.', en: 'Eat vegetables and protein first, then bread or potatoes.' },
+  { ro: 'Adaugă o legumă nouă azi. Ținta: 30 de plante diferite pe săptămână.', en: 'Add a new vegetable today. Target: 30 different plants a week.' },
+  { ro: 'Bea un pahar de apă imediat după ce te trezești.', en: 'Drink a glass of water right after you wake up.' },
+  { ro: 'Ridică-te de pe scaun la fiecare oră, chiar și 2 minute.', en: 'Stand up from your chair every hour, even for 2 minutes.' },
+  { ro: 'Pune o porție de varză murată sau chefir lângă masa de azi.', en: 'Add a portion of sauerkraut or kefir to a meal today.' },
+  { ro: 'Culcă-te azi cu 20 de minute mai devreme. Adulții au nevoie de 7+ ore.', en: 'Go to bed 20 minutes earlier tonight. Adults need 7+ hours.' },
+  { ro: 'Urcă pe scări în loc de lift, măcar o dată.', en: 'Take the stairs instead of the lift at least once.' },
+  { ro: 'Pune proteină la micul dejun: ouă, brânză de vaci, iaurt.', en: 'Put protein in your breakfast: eggs, cottage cheese, yogurt.' },
+  { ro: 'Înlocuiește băutura dulce de azi cu apă sau ceai neîndulcit.', en: 'Swap today’s sugary drink for water or unsweetened tea.' },
+  { ro: 'Fă rutina de 4 minute „Pauza de birou” de două ori azi.', en: 'Do the 4-minute “Office break” twice today.' },
+  { ro: 'Ieși 15 minute la lumină naturală dimineața. Îți reglează ceasul intern.', en: 'Get 15 minutes of daylight in the morning. It sets your body clock.' },
+  { ro: 'Pregătește mâncarea pentru mâine seara. Planul bate voința.', en: 'Prep tomorrow’s food tonight. A plan beats willpower.' },
+  { ro: 'Mănâncă lent: lasă tacâmurile jos între îmbucături.', en: 'Eat slowly: put your fork down between bites.' },
+  { ro: 'Adaugă o lingură de semințe de in măcinate la o masă.', en: 'Add a spoon of ground flaxseed to one meal.' },
+  { ro: 'Măsoară-ți talia azi. Talia sub jumătate din înălțime e ținta (NICE).', en: 'Measure your waist today. Under half your height is the target (NICE).' },
+  { ro: 'Fă 2 minute de respirație 4–6 înainte de somn.', en: 'Do 2 minutes of 4–6 breathing before bed.' },
+  { ro: 'Pune telefonul departe de pat diseară.', en: 'Keep your phone away from the bed tonight.' },
+  { ro: 'Alege fasole, linte sau năut la o masă azi.', en: 'Choose beans, lentils or chickpeas at one meal today.' },
+  { ro: 'Fă 20 de genuflexiuni, împărțite cum vrei pe parcursul zilei.', en: 'Do 20 squats, split however you like through the day.' },
+];
+
+export interface Badge { id: string; icon: string; ro: string; en: string; descRo: string; descEn: string }
+export const BADGES: Badge[] = [
+  { id: 'first_workout', icon: '🔥', ro: 'Prima scânteie', en: 'First spark', descRo: 'Primul antrenament bifat', descEn: 'First workout logged' },
+  { id: 'streak3', icon: '⚡', ro: '3 zile la rând', en: '3-day streak', descRo: '3 zile active consecutive', descEn: '3 active days in a row' },
+  { id: 'streak7', icon: '🏅', ro: 'O săptămână perfectă', en: 'Perfect week', descRo: '7 zile active consecutive', descEn: '7 active days in a row' },
+  { id: 'streak30', icon: '👑', ro: 'Luna de foc', en: 'Month on fire', descRo: '30 de zile active consecutive', descEn: '30 active days in a row' },
+  { id: 'workouts10', icon: '💪', ro: '10 antrenamente', en: '10 workouts', descRo: '10 antrenamente bifate', descEn: '10 workouts logged' },
+  { id: 'workouts50', icon: '🦾', ro: '50 de antrenamente', en: '50 workouts', descRo: '50 de antrenamente bifate', descEn: '50 workouts logged' },
+  { id: 'hydro7', icon: '💧', ro: 'Hidratat', en: 'Hydrated', descRo: 'Obiectivul de apă atins 7 zile', descEn: 'Water goal hit on 7 days' },
+  { id: 'mover10', icon: '🚶', ro: 'Mereu în mișcare', en: 'Always moving', descRo: '10 rutine scurte făcute', descEn: '10 short routines done' },
+  { id: 'measured', icon: '📏', ro: 'Știu unde sunt', en: 'Baseline set', descRo: 'Prima măsurătoare', descEn: 'First measurement' },
+  { id: 'minus2', icon: '📉', ro: 'Primele 2 kg', en: 'First 2 kg', descRo: '2 kg mai puțin față de start', descEn: '2 kg down from start' },
+  { id: 'steps10k', icon: '👟', ro: '10.000 de pași', en: '10,000 steps', descRo: 'O zi cu 10.000+ pași', descEn: 'A day with 10,000+ steps' },
+];

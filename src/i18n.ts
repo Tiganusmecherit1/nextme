@@ -166,7 +166,7 @@ const D = {
   goal_fat_loss: ['Slăbit (grăsime)', 'Fat loss'],
   goal_muscle: ['Masă musculară', 'Muscle gain'],
   goal_bodybuilding: ['Culturism', 'Bodybuilding'],
-  goal_strength_home: ['Formă bună acasă', 'Fit at home'],
+  goal_strength_home: ['Antrenament acasă', 'Home workouts'],
   level: ['Experiența cu antrenamentul de forță', 'Strength training experience'],
   lvl_beginner: ['Începător (sub 6 luni)', 'Beginner (under 6 months)'],
   lvl_intermediate: ['Mediu (6 luni – 2 ani)', 'Intermediate (6 months – 2 years)'],

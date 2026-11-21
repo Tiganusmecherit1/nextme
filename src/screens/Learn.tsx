@@ -66,7 +66,7 @@ export function LessonView({ id }: { id: string }) {
       <Header title={l.meta.title} back />
       <article className="card prose">
         <p className="eyebrow">{l.meta.readMinutes ?? 3} {t('readMin')}</p>
-        <Markdown src={l.body} lang={getLang()} />
+        <Markdown src={l.body.replace(/^\s*#\s+[^\n]*\n/, '')} lang={getLang()} />
         {sources.length > 0 && (
           <div className="sources">
             <h4>{t('source')}</h4>
@@ -74,6 +74,7 @@ export function LessonView({ id }: { id: string }) {
           </div>
         )}
       </article>
+      <p className="disclaimer lesson-disc">⚕︎ {getLang() === 'ro' ? 'Informații educaționale, nu sfat medical. Consultă medicul înainte de schimbări de dietă sau antrenament.' : 'Educational information, not medical advice. Consult your doctor before changing your diet or training.'}</p>
       {next && lessonFor(next) && <button className="btn full" onClick={() => go('#/lesson/' + next)}>{t('next')}: {lessonFor(next)!.meta.title}</button>}
       <Disclaimer />
     </div>

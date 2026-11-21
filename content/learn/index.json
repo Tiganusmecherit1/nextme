@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "languages": [
+    "ro",
+    "en"
+  ],
+  "chapters": [
+    {
+      "id": "start",
+      "order": 1,
+      "icon": "brain",
+      "title": {
+        "ro": "Început",
+        "en": "Start here"
+      },
+      "lessons": [
+        "01-bun-venit"
+      ]
+    },
+    {
+      "id": "celula",
+      "order": 2,
+      "icon": "cell",
+      "title": {
+        "ro": "Celula și energia",
+        "en": "Cells and energy"
+      },
+      "lessons": [
+        "02-celula",
+        "03-energia-atp",
+        "04-mitocondria",
+        "05-metabolismul",
+        "06-calorii"
+      ]
+    },
+    {
+      "id": "macro",
+      "order": 3,
+      "icon": "apple",
+      "title": {
+        "ro": "Macronutrienții",
+        "en": "Macronutrients"
+      },
+      "lessons": [
+        "07-macronutrienti",
+        "08-proteine",
+        "09-necesar-proteine",
+        "10-carbohidrati",
+        "11-fibre",
+        "12-grasimi-alimentare",
+        "13-tipuri-grasimi",
+        "14-alcool",
+        "15-zaharul"
+      ]
+    },
+    {
+      "id": "micro",
+      "order": 4,
+      "icon": "pill",
+      "title": {
+        "ro": "Vitamine și minerale",
+        "en": "Vitamins and minerals"
+      },
+      "lessons": [
+        "16-micronutrienti",
+        "17-vitamina-d",
+        "18-b12-folat",
+        "19-fier",
+        "20-magneziu-potasiu",
+        "21-calciu",
+        "22-sare-sodiu",
+        "23-iod-zinc-seleniu"
+      ]
+    },
+    {
+      "id": "apa",
+      "order": 5,
+      "icon": "droplet",
+      "title": {
+        "ro": "Apa din corp",
+        "en": "Water and hydration"
+      },
+      "lessons": [
+        "24-apa-in-corp",
+        "25-hidratare",
+        "26-cata-apa",
+        "27-retentia-apa"
+      ]
+    },
+    {
+      "id": "grasime",
+      "order": 6,
+      "icon": "flame",
+      "title": {
+        "ro": "Grăsimea corporală",
+        "en": "Body fat"
+      },
+      "lessons": [
+        "28-tesut-adipos",
+        "29-grasime-alba-bruna",
+        "30-subcutanata-viscerala",
+        "31-slabire-locala",
+        "32-unde-pleaca-grasimea",
+        "33-celulele-adipoase",
+        "34-adaptarea-metabolica"
+      ]
+    },
+    {
+      "id": "glicemie",
+      "order": 7,
+      "icon": "scale",
+      "title": {
+        "ro": "Glicemia și insulina",
+        "en": "Blood sugar and insulin"
+      },
+      "lessons": [
+        "35-glicemia",
+        "36-insulina",
+        "37-rezistenta-insulina",
+        "38-indice-glicemic",
+        "39-varfuri-glicemice",
+        "40-analize-glicemie"
+      ]
+    },
+    {
+      "id": "microbiom",
+      "order": 8,
+      "icon": "leaf",
+      "title": {
+        "ro": "Microbiomul intestinal",
+        "en": "Gut microbiome"
+      },
+      "lessons": [
+        "41-microbiomul",
+        "42-fibre-scfa",
+        "43-fermentate",
+        "44-dusmanii-microbiomului",
+        "45-axa-intestin-creier"
+      ]
+    },
+    {
+      "id": "foame",
+      "order": 9,
+      "icon": "heart",
+      "title": {
+        "ro": "Foamea și GLP-1",
+        "en": "Hunger and GLP-1"
+      },
+      "lessons": [
+        "46-hormonii-foamei",
+        "47-glp1",
+        "48-glp1-natural"
+      ]
+    },
+    {
+      "id": "muschi",
+      "order": 10,
+      "icon": "dumbbell",
+      "title": {
+        "ro": "Mușchii și antrenamentul",
+        "en": "Muscles and training"
+      },
+      "lessons": [
+        "49-muschiul",
+        "50-ce-se-intampla-cand-ridici",
+        "51-hipertrofia",
+        "52-febra-musculara",
+        "53-sarcopenia"
+      ]
+    },
+    {
+      "id": "oase",
+      "order": 11,
+      "icon": "bone",
+      "title": {
+        "ro": "Oase și tendoane",
+        "en": "Bones and tendons"
+      },
+      "lessons": [
+        "54-osul-e-viu",
+        "55-greutati-si-oase",
+        "56-tendoane-articulatii"
+      ]
+    },
+    {
+      "id": "semnale",
+      "order": 12,
+      "icon": "moon",
+      "title": {
+        "ro": "Somn, stres și semnalele corpului",
+        "en": "Sleep, stress and body signals"
+      },
+      "lessons": [
+        "57-somnul",
+        "58-stres-cortizol",
+        "59-semnalele-corpului"
+      ]
+    },
+    {
+      "id": "mituri",
+      "order": 13,
+      "icon": "brain",
+      "title": {
+        "ro": "Mituri demontate",
+        "en": "Myths busted"
+      },
+      "lessons": [
+        "60-mituri"
+      ]
+    }
+  ]
+}

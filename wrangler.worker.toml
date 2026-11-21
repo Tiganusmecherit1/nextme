@@ -1,0 +1,18 @@
+# Worker deployment (used because Pages asset upload is not available from the build environment).
+name = "nextme"
+main = "worker/index.ts"
+compatibility_date = "2025-10-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nextme-db"
+database_id = "5664b3b4-8138-423c-9894-88fa8fef8106"
+migrations_dir = "migrations"
+
+[ai]
+binding = "AI"
+
+[vars]
+AI_DAILY_LIMIT = "5"
+VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct"

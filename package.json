@@ -9,7 +9,8 @@
     "preview": "wrangler pages dev dist",
     "db:local": "wrangler d1 migrations apply nextme-db --local",
     "db:remote": "wrangler d1 migrations apply nextme-db --remote",
-    "deploy": "npm run build && wrangler pages deploy dist"
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy:worker": "npm run build && node scripts/embed-assets.mjs && wrangler deploy -c wrangler.worker.toml"
   },
   "dependencies": {
     "react": "^19.2.0",

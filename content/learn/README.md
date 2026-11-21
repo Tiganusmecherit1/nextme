@@ -1,11 +1,11 @@
 # NextMe – modulul educațional („Învață”)
 
-60 de lecții în română (~27.000 de cuvinte, ~55–60 de pagini), grupate în 13 capitole.
+60 de lecții în română și în engleză (~27.000 de cuvinte pe limbă, ~55–60 de pagini), grupate în 13 capitole.
 
 ## Format
 
 - `index.json` – capitolele, în ordine, cu `id`, `order`, `icon`, `title.ro` / `title.en` și lista de lecții.
-- `ro/<lessonId>.md` – o lecție. Versiunile în engleză vor sta în `en/<lessonId>.md`; aplicația folosește `ro/` dacă lipsește fișierul `en/`.
+- `ro/<lessonId>.md` – o lecție în română; `en/<lessonId>.md` – aceeași lecție în engleză (aceleași surse). Aplicația folosește `ro/` dacă lipsește fișierul `en/`. În engleză, rezumatul final se numește `## In short`.
 
 Fiecare lecție are frontmatter YAML simplu:
 

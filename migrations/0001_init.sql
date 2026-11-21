@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS daily_logs (
   water_ml INTEGER NOT NULL DEFAULT 0,
   workout_done INTEGER NOT NULL DEFAULT 0,
   workout_minutes INTEGER NOT NULL DEFAULT 0,
+  steps INTEGER NOT NULL DEFAULT 0,
+  moves TEXT NOT NULL DEFAULT '[]',
   foods TEXT NOT NULL DEFAULT '[]',
   PRIMARY KEY (user_id, date)
 );
@@ -48,3 +50,11 @@ CREATE TABLE IF NOT EXISTS ai_usage (
   count INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (user_id, date)
 );
+CREATE TABLE IF NOT EXISTS checkins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  week INTEGER NOT NULL,
+  answers TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_checkins_user ON checkins(user_id, date);

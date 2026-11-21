@@ -6,7 +6,7 @@ pages_build_output_dir = "./dist"
 binding = "DB"
 database_name = "nextme-db"
 # Replace with the id printed by: npx wrangler d1 create nextme-db
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "5664b3b4-8138-423c-9894-88fa8fef8106"
 migrations_dir = "migrations"
 
 [ai]

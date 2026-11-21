@@ -4,3 +4,4 @@ dist
 .dev.vars
 *.log
 *.tsbuildinfo
+worker/assets.gen.ts

@@ -1,0 +1,18 @@
+name = "nextme"
+compatibility_date = "2025-10-01"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nextme-db"
+# Replace with the id printed by: npx wrangler d1 create nextme-db
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[ai]
+binding = "AI"
+
+[vars]
+# Free daily photo analyses per user (plate + gym machine combined)
+AI_DAILY_LIMIT = "5"
+VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct"

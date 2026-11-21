@@ -1,0 +1,50 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  pass_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  ics_token TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE TABLE IF NOT EXISTS profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS daily_logs (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  water_ml INTEGER NOT NULL DEFAULT 0,
+  workout_done INTEGER NOT NULL DEFAULT 0,
+  workout_minutes INTEGER NOT NULL DEFAULT 0,
+  foods TEXT NOT NULL DEFAULT '[]',
+  PRIMARY KEY (user_id, date)
+);
+CREATE TABLE IF NOT EXISTS measurements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  weight REAL, waist REAL, hip REAL, chest REAL, arm REAL, thigh REAL, neck REAL
+);
+CREATE INDEX IF NOT EXISTS idx_meas_user ON measurements(user_id, date);
+CREATE TABLE IF NOT EXISTS events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  time TEXT,
+  title TEXT NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'custom'
+);
+CREATE INDEX IF NOT EXISTS idx_events_user ON events(user_id, date);
+CREATE TABLE IF NOT EXISTS ai_usage (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, date)
+);

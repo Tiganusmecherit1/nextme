@@ -30,7 +30,7 @@ export function Auth({ onDone }: { onDone: () => void }) {
     <div className="auth">
       <div className="auth-glow" />
       <button className="lang-toggle" onClick={() => { setLang(getLang() === 'ro' ? 'en' : 'ro'); force((x) => x + 1); }}>
-        {getLang() === 'ro' ? 'EN' : 'RO'}
+        {getLang() === 'ro' ? '🇬🇧 English' : '🇷🇴 Română'}
       </button>
       <div className="logo-big">Next<span>Me</span></div>
       <p className="muted center">{t('appTagline')}</p>

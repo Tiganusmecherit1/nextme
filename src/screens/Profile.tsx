@@ -19,6 +19,7 @@ export function ProfileScreen({ onRedo }: { onRedo: () => void }) {
       </section>
       <button className="card list-item" onClick={() => go('#/progress')}><span className="emoji">📈</span><div><b>{t('progress')}</b></div><span className="chev">›</span></button>
       <button className="card list-item" onClick={() => go('#/calendar')}><span className="emoji">📅</span><div><b>{t('calendar')}</b><p className="small muted">{t('googleCal')}</p></div><span className="chev">›</span></button>
+      <button className="card list-item" onClick={() => go('#/sync')}><span className="emoji">⌚</span><div><b>{lang === 'ro' ? 'Ceas și telefon' : 'Watch & phone'}</b><p className="small muted">{lang === 'ro' ? 'Pași și puls automat (Apple Health, Health Connect)' : 'Automatic steps and heart rate (Apple Health, Health Connect)'}</p></div><span className="chev">›</span></button>
       <section className="card">
         <h3>💧 {t('reminders')}</h3>
         <p className="small muted">{t('remindersOn')}</p>

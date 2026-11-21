@@ -1,3 +1,4 @@
+import { SyncScreen } from './screens/Sync';
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import type { Profile } from './calc';
@@ -81,6 +82,7 @@ function Shell({ onRedo }: { onRedo: () => void }) {
     case 'progress': screen = <Progress />; break;
     case 'profile': screen = <ProfileScreen onRedo={onRedo} />; break;
     case 'checkin': screen = <CheckIn />; break;
+    case 'sync': screen = <SyncScreen />; break;
     default: screen = <Today />;
   }
   const tab = ['train', 'exercise'].includes(route) ? 'train' : ['move', 'routine'].includes(route) ? 'move' : route === 'meals' ? 'meals'

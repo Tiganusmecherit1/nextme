@@ -32,7 +32,7 @@ Fiecare lecție se termină cu `## Pe scurt`. Fără HTML brut și fără imagin
 
 ## Surse
 
-Ghiduri oficiale (OMS, EFSA, ACSM, ADA, EWGSOP2) și studii publicate în reviste cu peer review. Unde nu am putut confirma un DOI exact, linkul duce la căutarea titlului în PubMed sau în arhiva OMS, ca să fie mereu verificabil.
+Ghiduri oficiale (OMS, EFSA, ACSM, ADA, EWGSOP2) și studii publicate în reviste cu peer review. Linkurile duc la DOI, PubMed/PMC, NCBI Bookshelf sau pagina oficială OMS/EFSA. Citările care nu fuseseră confirmate inițial au fost verificate pe web și corectate; o sursă care nu a putut fi confirmată (Kreitzman 1992) a fost scoasă.
 
 ## Disclaimer
 

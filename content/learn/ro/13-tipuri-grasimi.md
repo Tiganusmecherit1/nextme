@@ -9,7 +9,7 @@ sources:
   - label: "OMS – Grăsimile trans (fișă informativă)"
     url: "https://www.who.int/news-room/fact-sheets/detail/trans-fat"
   - label: "OMS. Saturated fatty acid and trans-fatty acid intake for adults and children: WHO guideline, 2023"
-    url: "https://iris.who.int/discover?query=Saturated+fatty+acid+and+trans-fatty+acid+intake+for+adults+and+children"
+    url: "https://www.who.int/publications/i/item/9789240073630"
   - label: "EFSA. Scientific Opinion on Dietary Reference Values for fats. EFSA Journal, 2010"
     url: "https://doi.org/10.2903/j.efsa.2010.1461"
   - label: "Estruch R și colab. Primary Prevention of Cardiovascular Disease with a Mediterranean Diet Supplemented with Extra-Virgin Olive Oil or Nuts (PREDIMED). NEJM, 2018"

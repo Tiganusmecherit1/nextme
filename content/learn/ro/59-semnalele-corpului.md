@@ -11,7 +11,7 @@ sources:
   - label: "Riebe D și colab. Updating ACSM's recommendations for exercise preparticipation health screening. Med Sci Sports Exerc, 2015"
     url: "https://doi.org/10.1249/MSS.0000000000000664"
   - label: "Mountjoy M și colab. 2023 International Olympic Committee's consensus statement on Relative Energy Deficiency in Sport (REDs). Br J Sports Med, 2023"
-    url: "https://doi.org/10.1136/bjsports-2023-106994"
+    url: "https://pubmed.ncbi.nlm.nih.gov/37752011/"
 ---
 
 # Semnalele corpului: foame, poftă, oboseală, durere

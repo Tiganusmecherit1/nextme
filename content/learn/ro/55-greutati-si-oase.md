@@ -11,9 +11,9 @@ sources:
   - label: "Bonewald LF. The amazing osteocyte. J Bone Miner Res, 2011"
     url: "https://doi.org/10.1002/jbmr.320"
   - label: "Robling AG, Turner CH. Mechanical signaling for bone modeling and remodeling. Crit Rev Eukaryot Gene Expr, 2009"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Robling+Turner+Mechanical+signaling+for+bone+modeling+and+remodeling"
+    url: "https://pubmed.ncbi.nlm.nih.gov/19817708/"
   - label: "Beck BR și colab. Exercise and Sports Science Australia (ESSA) position statement on exercise prescription for the prevention and management of osteoporosis. J Sci Med Sport, 2017"
-    url: "https://doi.org/10.1016/j.jsams.2016.10.001"
+    url: "https://pubmed.ncbi.nlm.nih.gov/27840033/"
 ---
 
 # Ce se întâmplă în os când tragi greutăți

@@ -9,11 +9,11 @@ sources:
   - label: "Vispute SS și colab. The effect of abdominal exercise on abdominal fat. J Strength Cond Res, 2011"
     url: "https://doi.org/10.1519/JSC.0b013e3181fb4a46"
   - label: "Ramírez-Campillo R și colab. Regional fat changes induced by localized muscle endurance resistance training. J Strength Cond Res, 2013"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Ramirez-Campillo+Regional+fat+changes+induced+by+localized+muscle+endurance+resistance+training"
+    url: "https://pubmed.ncbi.nlm.nih.gov/23222084/"
   - label: "Karpe F, Pinnick KE. Biology of upper-body and lower-body adipose tissue – link to whole-body phenotypes. Nat Rev Endocrinol, 2015"
     url: "https://doi.org/10.1038/nrendo.2014.185"
   - label: "Lafontan M, Berlan M. Fat cell adrenergic receptors and the control of white and brown fat cell function. J Lipid Res, 1993"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Lafontan+Berlan+Fat+cell+adrenergic+receptors+1993"
+    url: "https://doaj.org/article/c8d6f5bc604a4cc79d73025b950ca623"
 ---
 
 # De ce nu slăbești de unde vrei tu

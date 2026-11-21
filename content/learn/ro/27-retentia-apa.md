@@ -8,10 +8,8 @@ readMinutes: 4
 sources:
   - label: "Fernández-Elías VE și colab. Relationship between muscle water and glycogen recovery after prolonged exercise in the heat in humans. Eur J Appl Physiol, 2015"
     url: "https://doi.org/10.1007/s00421-015-3175-z"
-  - label: "Kreitzman SN, Coxon AY, Szaz KF. Glycogen storage: illusions of easy weight loss, excessive weight regain, and distortions in estimates of body composition. Am J Clin Nutr, 1992"
-    url: "https://doi.org/10.1093/ajcn/56.1.292S"
   - label: "White E și colab. Fluid retention over the menstrual cycle: 1-year data from the prospective ovulation cohort. Obstet Gynecol Int, 2011"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=White+Fluid+retention+over+the+menstrual+cycle+1-year+data+prospective+ovulation+cohort"
+    url: "https://doi.org/10.1155/2011/138451"
 ---
 
 # Retenția de apă și cântarul care sare

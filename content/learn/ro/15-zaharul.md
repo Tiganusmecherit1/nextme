@@ -11,7 +11,7 @@ sources:
   - label: "EFSA. Tolerable upper intake level for dietary sugars. EFSA Journal, 2022"
     url: "https://doi.org/10.2903/j.efsa.2022.7074"
   - label: "Malik VS, Hu FB. The role of sugar-sweetened beverages in the global epidemics of obesity and chronic diseases. Nat Rev Endocrinol, 2022"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Malik+Hu+role+of+sugar-sweetened+beverages+in+the+global+epidemics+of+obesity+and+chronic+diseases"
+    url: "https://pubmed.ncbi.nlm.nih.gov/35064240/"
 ---
 
 # Zahărul liber: cât e prea mult

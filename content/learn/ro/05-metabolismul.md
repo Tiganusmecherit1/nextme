@@ -11,7 +11,7 @@ sources:
   - label: "Pontzer H și colab. Daily energy expenditure through the human life course. Science, 2021"
     url: "https://doi.org/10.1126/science.abe5017"
   - label: "Levine JA. Non-exercise activity thermogenesis (NEAT). Best Pract Res Clin Endocrinol Metab, 2002"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Levine+Non-exercise+activity+thermogenesis+NEAT+2002"
+    url: "https://pubmed.ncbi.nlm.nih.gov/12468415/"
 ---
 
 # Metabolismul: cât ardem într-o zi

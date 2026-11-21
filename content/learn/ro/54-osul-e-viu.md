@@ -11,7 +11,7 @@ sources:
   - label: "Bonewald LF. The amazing osteocyte. J Bone Miner Res, 2011"
     url: "https://doi.org/10.1002/jbmr.320"
   - label: "International Osteoporosis Foundation – Epidemiology of osteoporosis and fragility fractures"
-    url: "https://www.osteoporosis.foundation/"
+    url: "https://www.osteoporosis.foundation/facts-statistics/epidemiology-of-osteoporosis-and-fragility-fractures"
 ---
 
 # Osul e viu: se dărâmă și se reconstruiește continuu

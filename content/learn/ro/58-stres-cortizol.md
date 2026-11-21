@@ -9,7 +9,7 @@ sources:
   - label: "Chrousos GP. Stress and disorders of the stress system. Nat Rev Endocrinol, 2009"
     url: "https://doi.org/10.1038/nrendo.2009.106"
   - label: "Epel E și colab. Stress may add bite to appetite in women: a laboratory study of stress-induced cortisol and eating behavior. Psychoneuroendocrinology, 2001"
-    url: "https://doi.org/10.1016/S0306-4530(00)00035-4"
+    url: "https://pubmed.ncbi.nlm.nih.gov/11070333/"
   - label: "OMS – Mental health: strengthening our response (fișă informativă)"
     url: "https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response"
 ---

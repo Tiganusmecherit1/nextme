@@ -7,11 +7,11 @@ summary: Corpul nu folosește direct caloriile din mâncare. Le transformă înt
 readMinutes: 4
 sources:
   - label: "Alberts B și colab. Molecular Biology of the Cell – How cells obtain energy from food (NCBI Bookshelf)"
-    url: "https://www.ncbi.nlm.nih.gov/books/?term=Alberts+Molecular+Biology+of+the+Cell+How+cells+obtain+energy+from+food"
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK26882/"
   - label: "Törnroth-Horsefield S, Neutze R. Opening and closing the metabolite gate. PNAS, 2008"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=T%C3%B6rnroth-Horsefield+Neutze+Opening+and+closing+the+metabolite+gate"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC2604989/"
   - label: "Hargreaves M, Spriet LL. Skeletal muscle energy metabolism during exercise. Nature Metabolism, 2020"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Hargreaves+Spriet+Skeletal+muscle+energy+metabolism+during+exercise+Nature+Metabolism"
+    url: "https://pubmed.ncbi.nlm.nih.gov/32747792/"
 ---
 
 # Ce înseamnă „energie” în corp: ATP

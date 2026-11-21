@@ -8,8 +8,6 @@ readMinutes: 4
 sources:
   - label: "Popkin BM, D'Anci KE, Rosenberg IH. Water, hydration, and health. Nutrition Reviews, 2010"
     url: "https://doi.org/10.1111/j.1753-4887.2010.00304.x"
-  - label: "Hall JE. Guyton and Hall Textbook of Medical Physiology – The body fluid compartments"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=body+fluid+compartments+intracellular+extracellular+water+review"
   - label: "EFSA. Scientific Opinion on Dietary reference values for water. EFSA Journal, 2010"
     url: "https://doi.org/10.2903/j.efsa.2010.1459"
 ---

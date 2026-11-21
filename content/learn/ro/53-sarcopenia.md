@@ -64,7 +64,7 @@ Mușchii răspund la antrenament **la orice vârstă**. Doar că au nevoie de:
 > Dacă ai peste 60 de ani, boli de inimă, osteoporoză diagnosticată, proteză sau dureri articulare, discută cu medicul sau cu un kinetoterapeut înainte de a începe. Un program adaptat e sigur și extrem de util.
 
 > [!TIP]
-> **În practică:** completează în NextMe vârsta reală și eventualele accidentări sau boli, iar dacă ești la început, pornește de la modulele „Wellness” sau „Antrenament acasă”.
+> **În practică:** completează în NextMe vârsta reală și eventualele accidentări sau boli, iar dacă ești la început, pornește de la obiectivele „Sănătate și energie” sau „Antrenament acasă”.
 
 ## Pe scurt
 

@@ -13,7 +13,7 @@ sources:
   - label: "Tolhurst G și colab. Short-chain fatty acids stimulate glucagon-like peptide-1 secretion via the G-protein-coupled receptor FFAR2. Diabetes, 2012"
     url: "https://doi.org/10.2337/db11-1019"
   - label: "Sonnenburg ED, Sonnenburg JL. Starving our microbial self: the deleterious consequences of a diet deficient in microbiota-accessible carbohydrates. Cell Metab, 2014"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Sonnenburg+Starving+our+microbial+self+microbiota-accessible+carbohydrates"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4896489/"
 ---
 
 # Cum te hrănesc bacteriile pe tine: fibre și 30 de plante pe săptămână

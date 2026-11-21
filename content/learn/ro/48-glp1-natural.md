@@ -7,7 +7,7 @@ summary: Proteinele, fibrele, ordinea alimentelor și mișcarea pot crește ușo
 readMinutes: 5
 sources:
   - label: "Steinert RE și colab. Ghrelin, CCK, GLP-1, and PYY(3-36): secretory controls and physiological roles in eating and glycemia in health, obesity, and after RYGB. Physiol Rev, 2017"
-    url: "https://doi.org/10.1152/physrev.00031.2014"
+    url: "https://pubmed.ncbi.nlm.nih.gov/28003328/"
   - label: "Kuwata H și colab. Meal sequence and glucose excursion, gastric emptying and incretin secretion in type 2 diabetes. Diabetologia, 2016"
     url: "https://doi.org/10.1007/s00125-015-3841-z"
   - label: "Jakubowicz D și colab. Incretin, insulinotropic and glucose-lowering effects of whey protein pre-load in type 2 diabetes. Diabetologia, 2014"

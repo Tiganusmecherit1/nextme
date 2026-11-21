@@ -7,9 +7,9 @@ summary: Mușchiul se adaptează în săptămâni, tendoanele în luni. De aici 
 readMinutes: 4
 sources:
   - label: "Magnusson SP, Kjaer M. The impact of loading, unloading, ageing and injury on the human tendon. J Physiol, 2019"
-    url: "https://doi.org/10.1113/JP275450"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6395417/"
   - label: "Bricca A și colab. Impact of exercise on articular cartilage in people at risk of, or with established, knee osteoarthritis: a systematic review of randomised controlled trials. Br J Sports Med, 2019"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Bricca+Impact+of+exercise+on+articular+cartilage+knee+osteoarthritis+systematic+review+randomised"
+    url: "https://doi.org/10.1136/bjsports-2017-098661"
   - label: "Gabbett TJ. The training–injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med, 2016"
     url: "https://doi.org/10.1136/bjsports-2015-095788"
 ---

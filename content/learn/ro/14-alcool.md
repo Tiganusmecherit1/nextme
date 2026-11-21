@@ -11,7 +11,7 @@ sources:
   - label: "OMS Europa – No level of alcohol consumption is safe for our health (2023)"
     url: "https://www.who.int/europe/news/item/04-01-2023-no-level-of-alcohol-consumption-is-safe-for-our-health"
   - label: "Parr EB și colab. Alcohol ingestion impairs maximal post-exercise rates of myofibrillar protein synthesis following a single bout of concurrent training. PLoS One, 2014"
-    url: "https://doi.org/10.1371/journal.pone.0088384"
+    url: "https://pubmed.ncbi.nlm.nih.gov/24533082/"
 ---
 
 # Alcoolul: al patrulea „macro” de care nu ai nevoie

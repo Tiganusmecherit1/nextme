@@ -9,9 +9,9 @@ sources:
   - label: "Granata C, Jamnick NA, Bishop DJ. Training-induced changes in mitochondrial content and respiratory function in human skeletal muscle. Sports Medicine, 2018"
     url: "https://doi.org/10.1007/s40279-018-0936-y"
   - label: "Hood DA și colab. Maintenance of skeletal muscle mitochondria in health, exercise, and aging. Annual Review of Physiology, 2019"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Hood+Maintenance+of+skeletal+muscle+mitochondria+in+health%2C+exercise%2C+and+aging"
+    url: "https://pubmed.ncbi.nlm.nih.gov/30216742/"
   - label: "Alberts B și colab. Molecular Biology of the Cell – The mitochondrion (NCBI Bookshelf)"
-    url: "https://www.ncbi.nlm.nih.gov/books/?term=Alberts+Molecular+Biology+of+the+Cell+mitochondria"
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK21054/"
 ---
 
 # Mitocondria: centrala din fiecare celulă

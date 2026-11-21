@@ -11,7 +11,7 @@ sources:
   - label: "Suez J și colab. Personalized microbiome-driven effects of non-nutritive sweeteners on human glucose tolerance. Cell, 2022"
     url: "https://doi.org/10.1016/j.cell.2022.07.016"
   - label: "OMS. Use of non-sugar sweeteners: WHO guideline, 2023"
-    url: "https://iris.who.int/discover?query=Use+of+non-sugar+sweeteners+WHO+guideline"
+    url: "https://www.who.int/publications/i/item/9789240073616"
   - label: "Sonnenburg ED și colab. Diet-induced extinctions in the gut microbiota compound over generations. Nature, 2016"
     url: "https://doi.org/10.1038/nature16504"
 ---

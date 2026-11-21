@@ -11,7 +11,7 @@ sources:
   - label: "Reynolds A și colab. Carbohydrate quality and human health: a series of systematic reviews and meta-analyses. The Lancet, 2019"
     url: "https://doi.org/10.1016/S0140-6736(18)31809-9"
   - label: "Hargreaves M, Spriet LL. Skeletal muscle energy metabolism during exercise. Nature Metabolism, 2020"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Hargreaves+Spriet+Skeletal+muscle+energy+metabolism+during+exercise"
+    url: "https://pubmed.ncbi.nlm.nih.gov/32747792/"
 ---
 
 # Carbohidrații: zahăr, amidon și fibre

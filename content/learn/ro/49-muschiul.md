@@ -9,7 +9,7 @@ sources:
   - label: "Janssen I și colab. Skeletal muscle mass and distribution in 468 men and women aged 18–88 yr. J Appl Physiol, 2000"
     url: "https://doi.org/10.1152/jappl.2000.89.1.81"
   - label: "Frontera WR, Ochala J. Skeletal muscle: a brief review of structure and function. Calcif Tissue Int, 2015"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Frontera+Ochala+Skeletal+muscle%3A+a+brief+review+of+structure+and+function"
+    url: "https://doi.org/10.1007/s00223-014-9915-y"
   - label: "Pedersen BK, Febbraio MA. Muscles, exercise and obesity: skeletal muscle as a secretory organ. Nat Rev Endocrinol, 2012"
     url: "https://doi.org/10.1038/nrendo.2012.49"
 ---

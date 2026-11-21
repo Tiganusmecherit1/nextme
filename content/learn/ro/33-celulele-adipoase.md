@@ -9,7 +9,7 @@ sources:
   - label: "Spalding KL și colab. Dynamics of fat cell turnover in humans. Nature, 2008"
     url: "https://doi.org/10.1038/nature06902"
   - label: "Rosenbaum M, Leibel RL. Adaptive thermogenesis in humans. Int J Obes, 2010"
-    url: "https://doi.org/10.1038/ijo.2010.184"
+    url: "https://pubmed.ncbi.nlm.nih.gov/20935667/"
 ---
 
 # Celulele de grăsime se micșorează, nu dispar

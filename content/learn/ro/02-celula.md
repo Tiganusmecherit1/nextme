@@ -9,7 +9,7 @@ sources:
   - label: "Sender R, Fuchs S, Milo R. Revised estimates for the number of human and bacteria cells in the body. PLoS Biol, 2016"
     url: "https://doi.org/10.1371/journal.pbio.1002533"
   - label: "Alberts B și colab. Molecular Biology of the Cell, ed. 4 (NCBI Bookshelf)"
-    url: "https://www.ncbi.nlm.nih.gov/books/?term=Alberts+Molecular+Biology+of+the+Cell"
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK21054/"
 ---
 
 # Corpul tău: 30.000 de miliarde de celule

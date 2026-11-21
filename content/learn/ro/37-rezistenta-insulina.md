@@ -13,7 +13,7 @@ sources:
   - label: "Neeland IJ și colab. Visceral and ectopic fat, atherosclerosis, and cardiometabolic disease. Lancet Diabetes Endocrinol, 2019"
     url: "https://doi.org/10.1016/S2213-8587(19)30084-1"
   - label: "Mota M și colab. Prevalence of diabetes mellitus and prediabetes in the adult Romanian population: PREDATORR study. J Diabetes, 2016"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=PREDATORR+prevalence+diabetes+prediabetes+Romanian"
+    url: "https://pubmed.ncbi.nlm.nih.gov/25850521/"
 ---
 
 # Rezistența la insulină: când cheia nu mai merge

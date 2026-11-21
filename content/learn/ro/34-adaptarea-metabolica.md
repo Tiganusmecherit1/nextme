@@ -9,9 +9,9 @@ sources:
   - label: "Fothergill E și colab. Persistent metabolic adaptation 6 years after 'The Biggest Loser' competition. Obesity, 2016"
     url: "https://doi.org/10.1002/oby.21538"
   - label: "Rosenbaum M, Leibel RL. Adaptive thermogenesis in humans. Int J Obes, 2010"
-    url: "https://doi.org/10.1038/ijo.2010.184"
+    url: "https://pubmed.ncbi.nlm.nih.gov/20935667/"
   - label: "Hall KD, Kahan S. Maintenance of lost weight and long-term management of obesity. Med Clin North Am, 2018"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Hall+Kahan+Maintenance+of+lost+weight+and+long-term+management+of+obesity"
+    url: "https://pubmed.ncbi.nlm.nih.gov/29156185/"
 ---
 
 # De ce slăbitul încetinește (adaptarea metabolică)

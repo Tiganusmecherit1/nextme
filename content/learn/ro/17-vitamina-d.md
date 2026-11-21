@@ -11,7 +11,7 @@ sources:
   - label: "NIH Office of Dietary Supplements – Vitamin D (fișă pentru profesioniști)"
     url: "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
   - label: "Cashman KD și colab. Vitamin D deficiency in Europe: pandemic? Am J Clin Nutr, 2016"
-    url: "https://doi.org/10.3945/ajcn.115.120873"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4807710/"
 ---
 
 # Vitamina D: vitamina soarelui

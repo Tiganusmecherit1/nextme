@@ -9,7 +9,7 @@ sources:
   - label: "American Diabetes Association. Standards of Care in Diabetes – Diagnosis and Classification of Diabetes"
     url: "https://diabetesjournals.org/care/issue/48/Supplement_1"
   - label: "OMS. Use of glycated haemoglobin (HbA1c) in the diagnosis of diabetes mellitus, 2011"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Use+of+glycated+haemoglobin+HbA1c+in+the+diagnosis+of+diabetes+mellitus+WHO+consultation+2011"
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK304267/"
   - label: "Matthews DR și colab. Homeostasis model assessment: insulin resistance and β-cell function from fasting plasma glucose and insulin concentrations in man. Diabetologia, 1985"
     url: "https://doi.org/10.1007/BF00280883"
 ---

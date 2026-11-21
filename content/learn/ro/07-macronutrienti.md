@@ -7,7 +7,7 @@ summary: Proteinele, carbohidrații și grăsimile sunt nutrienții de care ai n
 readMinutes: 4
 sources:
   - label: "EFSA – Dietary Reference Values for nutrients, Summary report, 2017"
-    url: "https://doi.org/10.2903/sp.efsa.2017.e15121"
+    url: "https://www.efsa.europa.eu/en/supporting/pub/e15121"
   - label: "EFSA DRV Finder (valori de referință pe vârstă și sex)"
     url: "https://multimedia.efsa.europa.eu/drvs/index.htm"
   - label: "OMS – Alimentație sănătoasă (fișă informativă)"

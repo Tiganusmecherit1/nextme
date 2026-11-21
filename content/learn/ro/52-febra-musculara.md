@@ -9,9 +9,9 @@ sources:
   - label: "Cheung K, Hume P, Maxwell L. Delayed onset muscle soreness: treatment strategies and performance factors. Sports Med, 2003"
     url: "https://doi.org/10.2165/00007256-200333020-00005"
   - label: "Schoenfeld BJ, Contreras B. Is postexercise muscle soreness a valid indicator of muscular adaptations? Strength Cond J, 2013"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Schoenfeld+Contreras+Is+postexercise+muscle+soreness+a+valid+indicator+of+muscular+adaptations"
+    url: "https://bretcontreras.com/wp-content/uploads/Is-Postexercise-Muscle-Soreness-a-Valid-Indicator-of-Muscular-Adaptations.pdf"
   - label: "Torres R și colab. Evidence of the physiotherapeutic interventions used currently after exercise-induced muscle damage: systematic review and meta-analysis. Phys Ther Sport, 2012"
-    url: "https://pubmed.ncbi.nlm.nih.gov/?term=Torres+exercise-induced+muscle+damage+physiotherapeutic+interventions+meta-analysis+2012"
+    url: "https://pubmed.ncbi.nlm.nih.gov/22498151/"
 ---
 
 # Febra musculară: ce e și ce nu e

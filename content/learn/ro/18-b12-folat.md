@@ -13,7 +13,7 @@ sources:
   - label: "EFSA. Scientific Opinion on Dietary Reference Values for cobalamin (vitamin B12). EFSA Journal, 2015"
     url: "https://doi.org/10.2903/j.efsa.2015.4150"
   - label: "OMS – Periconceptional folic acid supplementation to prevent neural tube defects"
-    url: "https://www.who.int/tools/elena"
+    url: "https://www.who.int/tools/elena/interventions/folate-periconceptional"
 ---
 
 # Vitamina B12 și folatul: sângele și nervii

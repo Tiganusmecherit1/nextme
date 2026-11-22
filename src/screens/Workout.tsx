@@ -156,7 +156,7 @@ export function WorkoutPlayer({ sessKey }: { sessKey: string }) {
       <p className="small muted center">{ro ? 'Exercițiul' : 'Exercise'} {exIdx + 1} / {total}</p>
 
       <section className="card figure-card">
-        <Figure anim={p.ex.anim} prop={p.ex.prop} size={200} />
+        <Figure id={p.ex.id} anim={p.ex.anim} size={200} />
       </section>
       <section className="card">
         <h2>{L(p.ex.name)}</h2>
@@ -279,7 +279,7 @@ export function SwapSheet({ current, onClose, onPick, permanentOnly }: { current
       {alts.length === 0 && <p className="muted">{ro ? 'Nu am alternative cu echipamentul tău.' : 'No alternatives with your equipment.'}</p>}
       {alts.map((e) => (
         <button key={e.id} className={'ex-row' + (sel?.id === e.id ? ' sel' : '')} onClick={() => setSel(e)}>
-          <Figure anim={e.anim} prop={e.prop} size={56} playing={false} />
+          <Figure id={e.id} anim={e.anim} size={56} playing={false} />
           <div><b>{L(e.name)}</b><p className="small muted">{L(e.muscles)}</p></div>
         </button>
       ))}

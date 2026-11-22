@@ -68,7 +68,7 @@ export function Library() {
             <h3>{g[lang]}</h3>
             {items.map((e) => (
               <button key={e.id} className="ex-row" onClick={() => go('#/exercise/' + e.id)}>
-                <Figure anim={e.anim} prop={e.prop} size={56} playing={false} />
+                <Figure id={e.id} anim={e.anim} size={56} playing={false} />
                 <div><b>{L(e.name)}</b><p className="small muted">{L(e.muscles)} · {LEVELS[e.level - 1][lang]}</p></div>
               </button>
             ))}

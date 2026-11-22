@@ -28,6 +28,11 @@ export function Train() {
         {s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️</button>}
       </div>} />
       <ProgramCard />
+      <button className="card list-item hero-link bio-link" onClick={() => go('#/biohack')}>
+        <span className="emoji">🧬</span>
+        <div><b>Biohacking</b><p className="small muted">{getLang() === 'ro' ? 'Intervale 4×4, Zona 2, forță minimă, plimbare după masă, gustări viguroase. Doar cu dovezi.' : '4×4 intervals, Zone 2, minimum strength, after-meal walk, vigorous snacks. Evidence only.'}</p></div>
+        <span className="chev">›</span>
+      </button>
       <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })}</p>
 
       {s.plan.map((sess, i) => (

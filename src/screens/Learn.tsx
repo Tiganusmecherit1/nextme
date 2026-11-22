@@ -32,6 +32,11 @@ export function Learn() {
         <div><b>{t('supplements')}</b><p className="small muted">{t('supplementsText')}</p></div>
         <span className="chev">›</span>
       </button>
+      <button className="card list-item hero-link bio-link" onClick={() => go('#/biohack')}>
+        <span className="emoji">🧬</span>
+        <div><b>Biohacking</b><p className="small muted">{getLang() === 'ro' ? 'Zona 2, VO2max, forță, glicemie, saună, frig: ce spun studiile, cu surse.' : 'Zone 2, VO2max, strength, blood sugar, sauna, cold: what studies say, with sources.'}</p></div>
+        <span className="chev">›</span>
+      </button>
       <h2 className="section-title">📚 {t('lessons')}</h2>
       {chapters.length === 0 && <p className="muted">{t('lessonsSoon')}</p>}
       {getLang() === 'en' && chapters.length > 0 && LESSONS.every((l) => l.lang !== 'en') && <p className="small muted">🇷🇴 Lessons are in Romanian for now; English translations are coming.</p>}

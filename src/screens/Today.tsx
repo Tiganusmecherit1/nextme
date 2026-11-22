@@ -103,7 +103,9 @@ export function Today() {
           <h3>{t('steps')}</h3>
           <p className="big c2">{d.steps.toLocaleString()}</p>
           <Bar pct={d.steps / stepGoal} color="var(--violet)" />
-          <p className="small muted">{t('logSteps')}</p>
+          {d.steps_source && d.steps_source !== 'manual'
+            ? <p className="small muted">⌚ {t('autoSynced')}{d.resting_hr ? ` · ❤️ ${d.resting_hr} bpm ${t('restingShort')}` : d.hr_avg ? ` · ❤️ ~${d.hr_avg} bpm` : ''}</p>
+            : <p className="small muted">{t('logSteps')} · <a href="#/sync" onClick={(e) => e.stopPropagation()}>⌚ {t('autoSetup')}</a></p>}
         </section>
         <section className="card tile">
           <h3>{t('water')}</h3>
@@ -173,8 +175,8 @@ export function Today() {
 
       <section className="card tile-wide quote">
         <p className="eyebrow">{t('quoteOfDay')}</p>
-        <blockquote>„{L(quote)}”</blockquote>
-        <p className="muted small">— {quote.by}</p>
+        <blockquote>{getLang() === 'ro' ? `„${quote.ro}”` : `“${quote.en}”`}</blockquote>
+        <p className="muted small">— {getLang() === 'en' && quote.byEn ? quote.byEn : quote.by}</p>
       </section>
 
       <Disclaimer />

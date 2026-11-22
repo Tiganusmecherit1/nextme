@@ -85,6 +85,9 @@ const D = {
   remindersOn: ['Mementouri active cât timp aplicația e deschisă sau în fundal.', 'Reminders active while the app is open or in the background.'],
   enable: ['Activează', 'Enable'],
   logSteps: ['Introdu pașii de azi', 'Enter today’s steps'],
+  autoSynced: ['sincronizat automat', 'synced automatically'],
+  restingShort: ['repaus', 'resting'],
+  autoSetup: ['automat', 'auto'],
   goals: ['Obiective', 'Goals'],
   rings: ['Inelele zilei', 'Today’s rings'],
   quickMoves: ['Mișcare rapidă', 'Quick moves'],
@@ -224,8 +227,18 @@ const D = {
 } as const;
 
 export type Key = keyof typeof D;
-let current: Lang = 'ro';
-export const setLang = (l: Lang) => { current = l; document.documentElement.lang = l; };
+// First visit: Romanian browsers get RO, everyone else EN. Later visits keep the last choice.
+const initialLang = (): Lang => {
+  try { const v = localStorage.getItem('nm_lang'); if (v === 'ro' || v === 'en') return v; } catch { /* storage blocked */ }
+  return typeof navigator !== 'undefined' && !/^ro\b/i.test(navigator.language || '') && !(navigator.languages || []).some((l) => /^ro\b/i.test(l)) ? 'en' : 'ro';
+};
+let current: Lang = initialLang();
+if (typeof document !== 'undefined') document.documentElement.lang = current;
+export const setLang = (l: Lang) => {
+  current = l;
+  document.documentElement.lang = l;
+  try { localStorage.setItem('nm_lang', l); } catch { /* storage blocked */ }
+};
 export const getLang = () => current;
 export const t = (k: Key) => D[k][current === 'ro' ? 0 : 1];
 export const L = <T,>(o: { ro: T; en: T }) => o[current];

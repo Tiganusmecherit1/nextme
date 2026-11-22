@@ -21,6 +21,10 @@ export interface DayLog {
   workout_done: number;
   workout_minutes: number;
   steps: number;
+  steps_source?: string | null;
+  resting_hr?: number | null;
+  hr_avg?: number | null;
+  hr_max?: number | null;
   moves: string[];
   foods: FoodEntry[];
 }

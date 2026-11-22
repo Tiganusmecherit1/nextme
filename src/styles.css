@@ -280,3 +280,11 @@ code { background: var(--card2); padding: 1px 5px; border-radius: 6px; font-size
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Device sync */
+.sync-link { display: grid; gap: 8px; margin: 10px 0; }
+.input.mono, .code, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 6px; }
+.code { background: rgba(255,255,255,.06); padding: 10px 12px; border-radius: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.steps-list { margin: 12px 0 8px; padding-left: 20px; display: grid; gap: 8px; line-height: 1.45; }
+.tag-ro { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: rgba(255,255,255,.1); color: var(--muted, #aaa); vertical-align: middle; }

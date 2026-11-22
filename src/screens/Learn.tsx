@@ -34,6 +34,7 @@ export function Learn() {
       </button>
       <h2 className="section-title">📚 {t('lessons')}</h2>
       {chapters.length === 0 && <p className="muted">{t('lessonsSoon')}</p>}
+      {getLang() === 'en' && chapters.length > 0 && LESSONS.every((l) => l.lang !== 'en') && <p className="small muted">🇷🇴 Lessons are in Romanian for now; English translations are coming.</p>}
       {chapters.map((c) => (
         <section key={c.id} className="card">
           <h3>{ICONS[c.icon ?? ''] ?? '📘'} {L(c.title)}</h3>
@@ -42,7 +43,7 @@ export function Learn() {
             if (!l) return null;
             return (
               <button key={id} className="lesson-row" onClick={() => go('#/lesson/' + id)}>
-                <div><b>{l.meta.title}</b><p className="small muted">{l.meta.summary}</p></div>
+                <div><b>{l.meta.title}</b>{l.lang !== getLang() && <span className="tag-ro">RO</span>}<p className="small muted">{l.meta.summary}</p></div>
                 <span className="small muted nowrap">{l.meta.readMinutes ?? 3} {t('readMin')}</span>
               </button>
             );
@@ -65,6 +66,7 @@ export function LessonView({ id }: { id: string }) {
     <div className="page lesson">
       <Header title={l.meta.title} back />
       <article className="card prose">
+        {l.lang !== getLang() && <p className="small warn-card card">🇷🇴 This lesson is only in Romanian for now. The English version is on its way.</p>}
         <p className="eyebrow">{l.meta.readMinutes ?? 3} {t('readMin')}</p>
         <Markdown src={l.body.replace(/^\s*#\s+[^\n]*\n/, '')} lang={getLang()} />
         {sources.length > 0 && (

@@ -136,6 +136,103 @@ async function consumeAiQuota(env: Env, userId: number) {
   return { ok: true, used: used + 1, limit };
 }
 
+
+/* ---------------- Device sync (Apple Health via Shortcuts, Health Connect via webhook apps) ---------------- */
+async function sha256(s: string) {
+  return b64(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+}
+const numIn = (v: unknown, min: number, max: number): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = typeof v === 'number' ? v : Number(String(v).replace(/\s/g, '').replace(/,(?=\d{3}\b)/g, '').replace(',', '.'));
+  return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : null;
+};
+// Local calendar date of an ISO time. Times with an offset keep their own date; UTC times are converted to the given zone.
+function localDate(iso: string, tz: string): string | null {
+  const s = String(iso || '');
+  if (/^\d{4}-\d{2}-\d{2}T[^Z]*[+-]\d{2}:?\d{2}$/.test(s) || /^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(0, 10);
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
+}
+
+interface DayPatch { steps?: number; source: string; resting?: number; hrSum?: number; hrN?: number; hrMax?: number; hrAvg?: number }
+
+async function applySync(env: Env, userId: number, date: string, p: DayPatch) {
+  await env.DB.prepare('INSERT OR IGNORE INTO daily_logs (user_id, date) VALUES (?, ?)').bind(userId, date).run();
+  const sets: string[] = [];
+  const vals: unknown[] = [];
+  if (p.steps !== undefined) sets.push('steps = ?', 'steps_source = ?'), vals.push(p.steps, p.source);
+  if (p.resting !== undefined) sets.push('resting_hr = ?'), vals.push(p.resting);
+  if (p.hrAvg !== undefined) sets.push('hr_avg = ?', 'hr_sum = 0', 'hr_n = 0'), vals.push(p.hrAvg);
+  if (p.hrN) sets.push('hr_sum = hr_sum + ?', 'hr_n = hr_n + ?', 'hr_avg = (hr_sum + ?) / (hr_n + ?)'), vals.push(p.hrSum, p.hrN, p.hrSum, p.hrN);
+  if (p.hrMax !== undefined) sets.push('hr_max = MAX(COALESCE(hr_max, 0), ?)'), vals.push(p.hrMax);
+  if (!sets.length) return;
+  await env.DB.prepare(`UPDATE daily_logs SET ${sets.join(', ')} WHERE user_id = ? AND date = ?`).bind(...vals, userId, date).run();
+}
+
+async function handleSync(env: Env, request: Request, url: URL, token: string) {
+  const u = await env.DB.prepare('SELECT id FROM users WHERE sync_token_hash = ?').bind(await sha256(token)).first<{ id: number }>();
+  if (!u) return err('bad_token', 401);
+  const raw = await request.text();
+  if (raw.length > 2_000_000) return err('too_large', 413);
+  let body: any = {};
+  try { body = raw ? JSON.parse(raw) : {}; } catch { body = {}; }
+  for (const [k, v] of url.searchParams) if (body[k] === undefined) body[k] = v;
+  const tz = typeof body.timezone === 'string' && /^[A-Za-z_]+\/[A-Za-z_\/-]+$/.test(body.timezone) ? body.timezone : 'Europe/Bucharest';
+  const days = new Map<string, DayPatch>();
+  const day = (d: string, source: string) => { let x = days.get(d); if (!x) days.set(d, (x = { source })); return x; };
+
+  if (Array.isArray(body.steps) || Array.isArray(body.heart_rate) || Array.isArray(body.resting_heart_rate)) {
+    // Health Connect webhook format: arrays of records with ISO times
+    const src = 'health_connect';
+    const touched = new Set<string>();
+    const stmts: D1PreparedStatement[] = [];
+    for (const r of (Array.isArray(body.steps) ? body.steps : []).slice(0, 5000)) {
+      const c = numIn(r?.count, 0, 100000);
+      const d = localDate(r?.start_time, tz);
+      if (c === null || !d || !r.end_time) continue;
+      touched.add(d);
+      stmts.push(env.DB.prepare('INSERT OR REPLACE INTO sync_steps (user_id, date, start_time, end_time, count) VALUES (?, ?, ?, ?, ?)')
+        .bind(u.id, d, String(r.start_time).slice(0, 40), String(r.end_time).slice(0, 40), c));
+    }
+    for (let i = 0; i < stmts.length; i += 100) await env.DB.batch(stmts.slice(i, i + 100));
+    for (const d of touched) {
+      const t = await env.DB.prepare('SELECT SUM(count) AS n FROM sync_steps WHERE user_id = ? AND date = ?').bind(u.id, d).first<{ n: number }>();
+      day(d, src).steps = Math.min(100000, t?.n ?? 0);
+    }
+    for (const r of (Array.isArray(body.heart_rate) ? body.heart_rate : []).slice(0, 20000)) {
+      const bpm = numIn(r?.avg ?? r?.bpm, 25, 230);
+      const d = localDate(r?.time ?? r?.start_time, tz);
+      if (bpm === null || !d) continue;
+      const x = day(d, src);
+      x.hrSum = (x.hrSum ?? 0) + bpm; x.hrN = (x.hrN ?? 0) + 1;
+      const mx = numIn(r?.max ?? r?.bpm, 25, 230);
+      if (mx !== null) x.hrMax = Math.max(x.hrMax ?? 0, mx);
+    }
+    for (const r of (Array.isArray(body.resting_heart_rate) ? body.resting_heart_rate : []).slice(0, 500)) {
+      const bpm = numIn(r?.bpm ?? r?.beats_per_minute, 25, 150);
+      const d = localDate(r?.time ?? r?.start_time, tz);
+      if (bpm !== null && d) day(d, src).resting = bpm;
+    }
+  } else {
+    // Simple totals format (iOS Shortcuts / any automation): {date?, steps?, resting_hr?, hr_avg?, hr_max?}
+    const d = DATE_RE.test(String(body.date || '')) ? String(body.date) : localDate(new Date().toISOString(), tz)!;
+    const x = day(d, String(body.source || 'apple_health').replace(/[^a-z_]/g, '').slice(0, 20) || 'apple_health');
+    const steps = numIn(body.steps, 0, 100000); if (steps !== null) x.steps = steps;
+    const rest = numIn(body.resting_hr, 25, 150); if (rest !== null) x.resting = rest;
+    const avg = numIn(body.hr_avg ?? body.heart_rate, 25, 230); if (avg !== null) x.hrAvg = avg;
+    const mx = numIn(body.hr_max, 25, 230); if (mx !== null) x.hrMax = mx;
+  }
+
+  for (const [d, p] of days) if (DATE_RE.test(d)) await applySync(env, u.id, d, p);
+  await env.DB.prepare("UPDATE users SET last_sync_at = datetime('now') WHERE id = ?").bind(u.id).run();
+  return json({ ok: true, days: [...days.keys()].sort() });
+}
+
 /* ---------------- ICS ---------------- */
 function icsEscape(s: string) {
   return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
@@ -245,6 +342,10 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       return json({ ok: true }, 200, { 'set-cookie': sessionCookie(request, '', 0) });
     }
 
+    // Public device-sync webhook, authorised by a per-user secret token in the URL
+    const syncMatch = path.match(/^\/sync\/([A-Za-z0-9_-]{20,})$/);
+    if (syncMatch && method === 'POST') return handleSync(env, request, url, syncMatch[1]);
+
     // Everything below requires a session
     const user = await currentUser(ctx);
     if (!user) return err('unauthorized', 401);
@@ -252,11 +353,26 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     if (path === '/me' && method === 'GET') {
       const prof = await env.DB.prepare('SELECT data FROM profiles WHERE user_id = ?').bind(user.id).first<{ data: string }>();
       const ai = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, todayUTC()).first<{ count: number }>();
+      const sync = await env.DB.prepare('SELECT sync_token_hash IS NOT NULL AS on_, last_sync_at FROM users WHERE id = ?').bind(user.id).first<{ on_: number; last_sync_at: string | null }>();
       return json({
         user: { username: user.username, icsToken: user.ics_token },
         profile: prof ? JSON.parse(prof.data) : null,
         ai: { used: ai?.count ?? 0, limit: parseInt(env.AI_DAILY_LIMIT || '5', 10) },
+        sync: { enabled: !!sync?.on_, lastAt: sync?.last_sync_at ? sync.last_sync_at.replace(' ', 'T') + 'Z' : null },
       });
+    }
+
+    if (path === '/sync/token' && method === 'POST') {
+      const token = randomToken(24);
+      await env.DB.prepare('UPDATE users SET sync_token_hash = ? WHERE id = ?').bind(await sha256(token), user.id).run();
+      return json({ token, url: new URL('/api/sync/' + token, request.url).toString() });
+    }
+    if (path === '/sync/token' && method === 'DELETE') {
+      await env.DB.batch([
+        env.DB.prepare('UPDATE users SET sync_token_hash = NULL WHERE id = ?').bind(user.id),
+        env.DB.prepare('DELETE FROM sync_steps WHERE user_id = ?').bind(user.id),
+      ]);
+      return json({ ok: true });
     }
 
     if (path === '/profile' && method === 'PUT') {
@@ -273,7 +389,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
 
     if (path === '/account' && method === 'DELETE') {
       await env.DB.batch(
-        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage', 'checkins'].map((t) =>
+        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage', 'checkins', 'sync_steps'].map((t) =>
           env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(user.id)
         ).concat([env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id)])
       );
@@ -285,7 +401,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       const to = url.searchParams.get('to') || '';
       if (!DATE_RE.test(from) || !DATE_RE.test(to)) return err('bad_range');
       const r = await env.DB.prepare(
-        'SELECT date, water_ml, workout_done, workout_minutes, steps, moves, foods FROM daily_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date'
+        'SELECT date, water_ml, workout_done, workout_minutes, steps, steps_source, resting_hr, hr_avg, hr_max, moves, foods FROM daily_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date'
       )
         .bind(user.id, from, to)
         .all<any>();
@@ -311,6 +427,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       )
         .bind(user.id, date, water, done, mins, steps, moves, foods)
         .run();
+      if (b.steps !== undefined) await env.DB.prepare("UPDATE daily_logs SET steps_source = 'manual' WHERE user_id = ? AND date = ?").bind(user.id, date).run();
       return json({ date, water_ml: water, workout_done: done, workout_minutes: mins, steps, moves: JSON.parse(moves), foods: JSON.parse(foods) });
     }
 

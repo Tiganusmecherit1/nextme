@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { t } from '../i18n';
+import { back as navBack } from '../nav';
 
 export function Rings({ values, size = 132 }: { values: { pct: number; color: string }[]; size?: number }) {
-  const stroke = 13;
-  const gap = 3;
+  const stroke = Math.max(3.5, Math.round((size / 132) * 13 * 10) / 10);
+  const gap = Math.max(1, (size / 132) * 3);
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rings" aria-hidden>
       {values.map((v, i) => {
@@ -13,8 +14,8 @@ export function Rings({ values, size = 132 }: { values: { pct: number; color: st
         return (
           <g key={i} transform={`rotate(-90 ${size / 2} ${size / 2})`}>
             <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={v.color} strokeOpacity="0.2" strokeWidth={stroke} />
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={v.color} strokeWidth={stroke} strokeLinecap="round"
-              strokeDasharray={`${c * pct} ${c}`} style={{ transition: 'stroke-dasharray .8s cubic-bezier(.2,.8,.2,1)' }} />
+            {pct > 0 && <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={v.color} strokeWidth={stroke} strokeLinecap="round"
+              strokeDasharray={`${c * pct} ${c}`} style={{ transition: 'stroke-dasharray .8s cubic-bezier(.2,.8,.2,1)' }} />}
           </g>
         );
       })}
@@ -58,7 +59,7 @@ export function Disclaimer() {
 export function Header({ title, back, right }: { title: string; back?: boolean; right?: ReactNode }) {
   return (
     <header className="hdr">
-      {back && <button className="icon-btn" aria-label={t('back')} onClick={() => history.back()}>‹</button>}
+      {back && <button className="icon-btn" aria-label={t('back')} onClick={navBack}>‹</button>}
       <h1>{title}</h1>
       <div className="hdr-right">{right}</div>
     </header>
@@ -78,14 +79,14 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
   );
 }
 
-export function NumberPrompt({ label, initial, onSave, onClose }: { label: string; initial?: number; onSave: (n: number) => void; onClose: () => void }) {
+export function NumberPrompt({ label, initial, onSave, onClose, decimal }: { label: string; initial?: number; onSave: (n: number) => void; onClose: () => void; decimal?: boolean }) {
   const [v, setV] = useState(initial ? String(initial) : '');
   return (
     <Sheet open onClose={onClose} title={label}>
-      <input className="input big" inputMode="numeric" autoFocus value={v} onChange={(e) => setV(e.target.value.replace(/[^\d]/g, ''))} />
+      <input className="input big" inputMode={decimal ? 'decimal' : 'numeric'} autoFocus value={v} onChange={(e) => setV(decimal ? e.target.value.replace(/[^\d.,]/g, '') : e.target.value.replace(/[^\d]/g, ''))} />
       <div className="row gap">
         <button className="btn ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn" onClick={() => { onSave(Number(v) || 0); onClose(); }}>{t('save')}</button>
+        <button className="btn" onClick={() => { onSave(Number(v.replace(',', '.')) || 0); onClose(); }}>{t('save')}</button>
       </div>
     </Sheet>
   );

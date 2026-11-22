@@ -6,6 +6,7 @@ import { Bar, Disclaimer, Header, Sheet } from '../components/ui';
 import { dayPlan, shoppingList, sumN, type PlannedMeal } from '../meals';
 import { ING } from '../data/foods';
 import { api, ApiError, fileToDataUrl, type FoodEntry } from '../api';
+import { EditSheet } from './Profile';
 
 export function Meals() {
   const s = useStore();
@@ -14,6 +15,7 @@ export function Meals() {
   const plan = dayPlan(s.profile, today, s.targets.kcal);
   const [openMeal, setOpenMeal] = useState<PlannedMeal | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
+  const [dietOpen, setDietOpen] = useState(false);
   const eaten = sumN(d.foods.map((f) => ({ ...f, fiber: 0 })));
   const planned = sumN(plan.map((m) => m.n));
   const lang = getLang();
@@ -23,6 +25,13 @@ export function Meals() {
   return (
     <div className="page">
       <Header title={t('meals')} right={<button className="btn sm ghost" onClick={() => setShopOpen(true)}>🛒</button>} />
+      {s.profile.asked && !s.profile.asked.includes('diet') && (
+        <button className="card list-item warn-soft" onClick={() => setDietOpen(true)}>
+          <span className="emoji">🥗</span>
+          <div><b>{lang === 'ro' ? 'Cum mănânci?' : 'How do you eat?'}</b><p className="small muted">{lang === 'ro' ? 'Dietă și alergii, ca meniul să ți se potrivească. 20 de secunde.' : 'Diet and allergies, so the menu fits you. 20 seconds.'}</p></div>
+          <span className="chev">›</span>
+        </button>
+      )}
       <section className="card">
         <h3>{t('eaten')}</h3>
         <div className="macro"><span>{t('kcal')}</span><b>{eaten.kcal} / {s.targets.kcal}</b></div>
@@ -64,6 +73,7 @@ export function Meals() {
           <button className="btn full" onClick={() => { addFoods([{ name: openMeal.recipe[lang], ...openMeal.n, src: 'plan' }]); setOpenMeal(null); }}>✓ {t('ate')}</button>
         </Sheet>
       )}
+      {dietOpen && <EditSheet section="diet" title={t('diet')} onClose={() => setDietOpen(false)} />}
       {shopOpen && (
         <Sheet open onClose={() => setShopOpen(false)} title={t('shopping')}>
           <ul className="ing">{shoppingList(s.profile, today, s.targets.kcal).map((x) => (
@@ -75,7 +85,7 @@ export function Meals() {
   );
 }
 
-function PlateScan({ onAdd }: { onAdd: (f: FoodEntry[]) => void }) {
+export function PlateScan({ onAdd }: { onAdd: (f: FoodEntry[]) => void }) {
   const s = useStore();
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);

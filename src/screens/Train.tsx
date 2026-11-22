@@ -9,44 +9,109 @@ import { DEFAULT_DAYS, PHASE_INFO, PROGRAM_WEEKS, PROGRAMS, programOf, programWe
 import { SwapSheet, useLastSets } from './Workout';
 import type { Exercise } from '../data/exercises';
 import { api, ApiError, fileToDataUrl } from '../api';
+import { QuickList, RecoveryList } from './Move';
+import { EditSheet } from './Profile';
 
 const DOW = () => (getLang() === 'ro' ? ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
-export function Train() {
+export function Train({ section = 'program' }: { section?: string }) {
+  const ro = getLang() === 'ro';
+  const segs: [string, string, string][] = [
+    ['program', '#/train', ro ? 'Programul meu' : 'My program'],
+    ['quick', '#/train/quick', ro ? 'Rapid' : 'Quick'],
+    ['recovery', '#/train/recovery', ro ? 'Recuperare' : 'Recovery'],
+  ];
+  const cur = segs.some(([k]) => k === section) ? section : 'program';
+  return (
+    <div className="page">
+      <Header title={t('trainTab')} right={<button className="btn sm ghost" onClick={() => go('#/library')}>📚 {ro ? 'Exerciții' : 'Exercises'}</button>} />
+      <div className="segmented" role="tablist">
+        {segs.map(([k, href, label]) => (
+          <button key={k} role="tab" aria-selected={cur === k} className={cur === k ? 'on' : ''} onClick={() => location.replace(href)}>{label}</button>
+        ))}
+      </div>
+      {cur === 'quick' ? <QuickList /> : cur === 'recovery' ? <RecoveryList /> : <ProgramSection />}
+      <Disclaimer />
+    </div>
+  );
+}
+
+function ProgramSection() {
   const s = useStore();
+  const ro = getLang() === 'ro';
   const today = todayStr();
   const todaySession = sessionForDate(s.profile, s.plan, new Date());
   const [open, setOpen] = useState<string | null>(todaySession?.key ?? s.plan[0]?.key ?? null);
   const [gymOpen, setGymOpen] = useState(false);
+  const [healthOpen, setHealthOpen] = useState(false);
   const days = [...s.profile.trainingDays].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
   const d = s.day(today);
+  const pick = (key: string) => {
+    setOpen(key);
+    setTimeout(() => document.getElementById('sess-' + key)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
 
-  return (
-    <div className="page">
-      <Header title={t('train')} right={<div className="row gap-s">
-        <button className="btn sm ghost" onClick={() => go('#/library')}>📚 {getLang() === 'ro' ? 'Exerciții' : 'Exercises'}</button>
-        {s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️</button>}
-      </div>} />
-      <ProgramCard />
-      <button className="card list-item hero-link bio-link" onClick={() => go('#/biohack')}>
-        <span className="emoji">🧬</span>
-        <div><b>Biohacking</b><p className="small muted">{getLang() === 'ro' ? 'Intervale 4×4, Zona 2, forță minimă, plimbare după masă, gustări viguroase. Doar cu dovezi.' : '4×4 intervals, Zone 2, minimum strength, after-meal walk, vigorous snacks. Evidence only.'}</p></div>
+  const needsHealth = !!s.profile.asked && !s.profile.asked.includes('health');
+  return (<>
+    {needsHealth && (
+      <button className="card list-item warn-soft" onClick={() => setHealthOpen(true)}>
+        <span className="emoji">🩹</span>
+        <div><b>{ro ? 'Înainte de primul antrenament' : 'Before your first workout'}</b><p className="small muted">{ro ? 'Ai vreo accidentare sau afecțiune? Îți adaptez exercițiile.' : 'Any injury or condition? I’ll adapt your exercises.'}</p></div>
         <span className="chev">›</span>
       </button>
-      <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })}</p>
+    )}
+    <ProgramCard />
+    <WeekStrip onPick={pick} />
+    <p className="muted small">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })} · <a href="#/profile/training">{ro ? 'schimbă' : 'change'}</a></p>
 
-      {s.plan.map((sess, i) => (
-        <SessionCard key={sess.key} sess={sess} dayLabel={DOW()[days[i % Math.max(1, days.length)]] ?? ''}
-          isToday={todaySession?.key === sess.key} open={open === sess.key} onToggle={() => setOpen(open === sess.key ? null : sess.key)}
-          done={todaySession?.key === sess.key && !!d.workout_done}
-          onDone={() => s.patchDay(today, { workout_done: 1, workout_minutes: sess.estMinutes })} />
-      ))}
+    {s.plan.map((sess, i) => (
+      <SessionCard key={sess.key} sess={sess} dayLabel={DOW()[days[i % Math.max(1, days.length)]] ?? ''}
+        isToday={todaySession?.key === sess.key} open={open === sess.key} onToggle={() => setOpen(open === sess.key ? null : sess.key)}
+        done={todaySession?.key === sess.key && !!d.workout_done}
+        onDone={() => s.patchDay(today, { workout_done: 1, workout_minutes: sess.estMinutes })} />
+    ))}
 
-      <section className="card small-card">
-        <p className="small">📈 {t('progression')}</p>
-      </section>
-      <Disclaimer />
-      {gymOpen && <MyGym onClose={() => setGymOpen(false)} />}
+    {s.profile.location === 'gym' && (
+      <button className="card list-item" onClick={() => setGymOpen(true)}>
+        <span className="emoji">📷</span>
+        <div><b>{ro ? 'Sala mea: recunoaște un aparat' : 'My gym: identify a machine'}</b><p className="small muted">{ro ? 'Fă o poză unui aparat și află ce exerciții poți face pe el.' : 'Snap a machine and see which exercises it is for.'}</p></div>
+        <span className="chev">›</span>
+      </button>
+    )}
+    <section className="card small-card">
+      <p className="small">📈 {t('progression')}</p>
+    </section>
+    {gymOpen && <MyGym onClose={() => setGymOpen(false)} />}
+    {healthOpen && <EditSheet section="health" title={ro ? 'Sănătate' : 'Health'} onClose={() => setHealthOpen(false)} />}
+  </>);
+}
+
+/** This week at a glance: training days, today, and what's already done. */
+function WeekStrip({ onPick }: { onPick: (key: string) => void }) {
+  const s = useStore();
+  const ro = getLang() === 'ro';
+  const now = new Date();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+  const names = ro ? ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const ymd = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  return (
+    <div className="week-strip">
+      {names.map((n, i) => {
+        const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const sess = sessionForDate(s.profile, s.plan, date);
+        const key = ymd(date);
+        const isToday = key === todayStr();
+        const done = !!s.day(key).workout_done;
+        const past = key < todayStr();
+        return (
+          <button key={i} className={'wd' + (sess ? ' train' : '') + (isToday ? ' today' : '') + (done ? ' done' : '') + (past && sess && !done ? ' missed' : '')}
+            disabled={!sess} onClick={() => sess && onPick(sess.key)} aria-label={sess ? L(sess.title) : undefined}>
+            <span>{n}</span>
+            <b>{date.getDate()}</b>
+            <i>{done ? '✓' : sess ? '●' : ''}</i>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -99,7 +164,7 @@ function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: 
     setSwap(null);
   };
   return (
-    <section className={'card session' + (isToday ? ' today' : '')}>
+    <section id={'sess-' + sess.key} className={'card session' + (isToday ? ' today' : '')}>
       <button className="session-head" onClick={onToggle}>
         <div>
           <p className="eyebrow">{dayLabel}{isToday ? ` · ${t('today')}` : ''}</p>

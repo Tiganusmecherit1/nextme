@@ -3,6 +3,7 @@ import { api, emptyDay, type DayLog } from './api';
 import { addDays, macros, todayStr, waterGoalMl, type Profile } from './calc';
 import { buildPlan, type Session } from './plan';
 import { setLang } from './i18n';
+import { isActiveDay, stepGoal } from './activity';
 
 export interface Measurement { id: number; date: string; weight?: number; waist?: number; hip?: number; chest?: number; arm?: number; thigh?: number; neck?: number }
 export interface CalEvent { id: number; date: string; time?: string | null; title: string; kind: string }
@@ -35,7 +36,6 @@ export const useStore = () => {
   return s;
 };
 
-export const isActive = (d?: DayLog) => !!d && (d.workout_done > 0 || (d.moves?.length ?? 0) > 0 || d.steps >= 7000);
 
 export function StoreProvider(props: { username: string; icsToken: string; profile: Profile; ai: { used: number; limit: number }; onProfile: (p: Profile) => void; onLogout: () => void; children: ReactNode }) {
   const { profile } = props;
@@ -89,10 +89,11 @@ export function StoreProvider(props: { username: string; icsToken: string; profi
   const streak = useMemo(() => {
     let n = 0;
     let d = todayStr();
-    if (!isActive(days[d])) d = addDays(d, -1);
-    while (isActive(days[d])) { n++; d = addDays(d, -1); }
+    const g = stepGoal(profile);
+    if (!isActiveDay(days[d], g)) d = addDays(d, -1);
+    while (isActiveDay(days[d], g)) { n++; d = addDays(d, -1); }
     return n;
-  }, [days]);
+  }, [days, profile]);
 
   const logout = useCallback(async () => {
     await api('/auth/logout', { method: 'POST' }).catch(() => {});

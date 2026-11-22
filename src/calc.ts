@@ -35,6 +35,13 @@ export interface Profile {
   swaps?: Record<string, string>;
   /** chosen program template; 'auto' (default) builds from days/equipment/goal */
   program?: string;
+  /** custom daily step goal (default from age, see activity.ts) */
+  stepGoal?: number;
+  /**
+   * Progressive profiling: details asked later, when first needed ('health', 'diet').
+   * Undefined for profiles made with the old full onboarding, which already answered everything.
+   */
+  asked?: string[];
 }
 
 export const ageOf = (p: Pick<Profile, 'birthYear'>) => new Date().getFullYear() - p.birthYear;

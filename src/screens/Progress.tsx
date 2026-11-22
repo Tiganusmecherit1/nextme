@@ -1,10 +1,16 @@
 import { useMemo, useState } from 'react';
-import { useStore, isActive } from '../store';
+import { useStore } from '../store';
+import { isActiveDay, stepGoal } from '../activity';
 import { addDays, bmi, bmr, tdee, todayStr, waistToHeight } from '../calc';
 import { api } from '../api';
 import { getLang, t, type Key } from '../i18n';
 import { Disclaimer, go, Header, Sheet } from '../components/ui';
 import { BADGES } from '../data/motivation';
+import { activeMinutes, MOVE_GOAL } from '../activity';
+import { Rings } from '../components/ui';
+import { exById } from '../data/exercises';
+import { useLastSets } from './Workout';
+import { L } from '../i18n';
 
 const FIELDS = ['weight', 'waist', 'hip', 'chest', 'arm', 'thigh', 'neck'] as const;
 
@@ -37,7 +43,7 @@ export function useBadges() {
     let best = 0, run = 0;
     const sorted = Object.keys(s.days).sort();
     if (sorted.length) {
-      for (let d = sorted[0]; d <= todayStr(); d = addDays(d, 1)) { run = isActive(s.days[d]) ? run + 1 : 0; best = Math.max(best, run); }
+      for (let d = sorted[0]; d <= todayStr(); d = addDays(d, 1)) { run = isActiveDay(s.days[d], stepGoal(s.profile)) ? run + 1 : 0; best = Math.max(best, run); }
     }
     const ws = s.measurements.filter((m) => m.weight);
     const earned = new Set<string>();
@@ -53,7 +59,7 @@ export function useBadges() {
     if (ws.length >= 2 && ws[0].weight! - ws[ws.length - 1].weight! >= 2) earned.add('minus2');
     if (days.some((d) => d.steps >= 10000)) earned.add('steps10k');
     return earned;
-  }, [s.days, s.measurements, s.targets.waterMl]);
+  }, [s.days, s.measurements, s.targets.waterMl, s.profile]);
 }
 
 export function Progress() {
@@ -76,7 +82,8 @@ export function Progress() {
 
   return (
     <div className="page">
-      <Header title={t('progress')} back right={<button className="btn sm" onClick={() => setOpen(true)}>+ {t('add')}</button>} />
+      <Header title={t('progress')} right={<button className="btn sm ghost" onClick={() => setOpen(true)}>📏 {lang === 'ro' ? 'Măsurători' : 'Measure'}</button>} />
+      <WeekCard />
       <button className="card list-item accent-violet" onClick={() => go('#/checkin')}>
         <span className="emoji">✨</span>
         <div><b>{lang === 'ro' ? 'Schimbările corpului tău' : 'Your body changes'}</b><p className="small muted">{lang === 'ro' ? 'Check-in la 1, 2, 3 săptămâni, apoi lunar' : 'Check-in at 1, 2, 3 weeks, then monthly'}</p></div>
@@ -99,6 +106,12 @@ export function Progress() {
           </ul>
         )}
       </section>
+      <Strength />
+      <button className="card list-item" onClick={() => go('#/calendar')}>
+        <span className="emoji">📅</span>
+        <div><b>{t('calendar')}</b><p className="small muted">{lang === 'ro' ? 'Istoricul pe luni și sincronizare cu Google Calendar' : 'Monthly history and Google Calendar sync'}</p></div>
+        <span className="chev">›</span>
+      </button>
       <section className="card">
         <h3>{t('myNumbers')}</h3>
         <ul className="facts">
@@ -133,5 +146,70 @@ export function Progress() {
         </Sheet>
       )}
     </div>
+  );
+}
+
+/** The last 7 days as mini rings, plus the week's totals. */
+function WeekCard() {
+  const s = useStore();
+  const ro = getLang() === 'ro';
+  const goalSteps = stepGoal(s.profile);
+  const today = todayStr();
+  const dates = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+  const days = dates.map((d) => s.day(d));
+  const active = days.filter((d) => isActiveDay(d, goalSteps)).length;
+  const workouts = days.filter((d) => d.workout_done).length;
+  const minutes = days.reduce((a, d) => a + activeMinutes(d), 0);
+  const logged = days.filter((d) => d.steps > 0);
+  const avgSteps = logged.length ? Math.round(logged.reduce((a, d) => a + d.steps, 0) / logged.length) : 0;
+  const wd = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(ro ? 'ro-RO' : 'en-GB', { weekday: 'narrow' });
+  return (
+    <section className="card">
+      <h3>{ro ? 'Ultimele 7 zile' : 'Last 7 days'}</h3>
+      <div className="week-rings">
+        {days.map((d, i) => (
+          <div key={dates[i]} className={'wr' + (dates[i] === today ? ' today' : '')}>
+            <Rings size={40} values={[
+              { pct: activeMinutes(d) / MOVE_GOAL, color: 'var(--coral)' },
+              { pct: d.steps / goalSteps, color: 'var(--violet)' },
+              { pct: d.water_ml / s.targets.waterMl, color: 'var(--water)' },
+            ]} />
+            <span>{wd(dates[i])}</span>
+          </div>
+        ))}
+      </div>
+      <div className="pr-row four">
+        <div><span className="small muted">{ro ? 'Zile active' : 'Active days'}</span><b>{active}/7</b></div>
+        <div><span className="small muted">{ro ? 'Antrenamente' : 'Workouts'}</span><b>{workouts}</b></div>
+        <div><span className="small muted">{ro ? 'Minute' : 'Minutes'}</span><b>{minutes}</b></div>
+        <div><span className="small muted">{ro ? 'Pași/zi' : 'Steps/day'}</span><b>{avgSteps ? avgSteps.toLocaleString() : '—'}</b></div>
+      </div>
+      <p className="small muted">{ro ? `OMS: 150–300 min de mișcare moderată pe săptămână. Tu: ${minutes} min.` : `WHO: 150–300 min of moderate activity a week. You: ${minutes} min.`}</p>
+    </section>
+  );
+}
+
+/** Where your strength is now: heaviest set of the last session, per exercise, most recent first. */
+function Strength() {
+  const last = useLastSets();
+  const ro = getLang() === 'ro';
+  const rows = Object.entries(last ?? {})
+    .map(([id, v]) => ({ id, date: v.date, kg: v.sets.reduce((m, x) => Math.max(m, x.kg ?? 0), 0), reps: v.sets.reduce((m, x) => Math.max(m, x.reps), 0) }))
+    .filter((r) => exById(r.id))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 6);
+  if (!rows.length) return null;
+  return (
+    <section className="card">
+      <h3>💪 {ro ? 'Forța ta acum' : 'Your strength now'}</h3>
+      <ul className="ing">
+        {rows.map((r) => (
+          <li key={r.id} onClick={() => go('#/exercise/' + r.id)} className="tap">
+            <span>{L(exById(r.id)!.name)}</span><b>{r.kg ? `${r.kg} kg` : `${r.reps} ${ro ? 'rep.' : 'reps'}`}</b>
+          </li>
+        ))}
+      </ul>
+      <p className="small muted">{ro ? 'Apasă pe un exercițiu pentru istoric și recorduri.' : 'Tap an exercise for its history and records.'}</p>
+    </section>
   );
 }

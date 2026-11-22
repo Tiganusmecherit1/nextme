@@ -3,6 +3,8 @@ import { useStore } from '../store';
 import { todayStr } from '../calc';
 import { getLang, L } from '../i18n';
 import { Disclaimer, Header } from '../components/ui';
+import { DoneCard } from '../components/DoneCard';
+import { withMove } from '../activity';
 import { Figure } from '../components/Figure';
 import { EXERCISES } from '../data/exercises';
 import { beep, keepAwake, unlockAudio } from '../beep';
@@ -54,7 +56,7 @@ export function IntervalTimer() {
         setRun({ ...run, phase: 'done' });
         release.current();
         const d = s.day(todayStr());
-        if (!d.moves.includes('interval')) s.patchDay(todayStr(), { moves: [...d.moves, 'interval'] });
+        s.patchDay(todayStr(), { moves: withMove(d, 'interval', (cfg.rounds * (cfg.work + cfg.rest) + cfg.prep) / 60) });
       } else if (cfg.rest > 0) {
         beep('rest');
         setRun({ phase: 'rest', round: run.round, endsAt: t + cfg.rest * 1000, pausedLeft: null });
@@ -102,10 +104,7 @@ export function IntervalTimer() {
           </section>
         )}
         {run.phase === 'done' ? (
-          <>
-            <p className="center">{ro ? `${cfg.rounds} runde × ${cfg.work} s. Bravo!` : `${cfg.rounds} rounds × ${cfg.work} s. Well done!`}</p>
-            <button className="btn full" onClick={() => setRun(null)}>{ro ? 'Gata' : 'Done'}</button>
-          </>
+          <DoneCard title={ro ? 'Bravo! 💪' : 'Well done! 💪'} stats={ro ? `${cfg.rounds} runde × ${cfg.work} s` : `${cfg.rounds} rounds × ${cfg.work} s`} />
         ) : (
           <div className="row gap">
             <button className="btn ghost" onClick={stop}>■ Stop</button>

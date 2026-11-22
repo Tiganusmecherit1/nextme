@@ -30,20 +30,20 @@ const GUIDE: Record<Dev, { ro: string[]; en: string[] }> = {
   },
   android: {
     ro: [
-      'Verifică că aplicația ceasului sau a telefonului scrie în **Health Connect** (Samsung Health, Fitbit, Google Fit, Withings etc.: în setările lor caută „Health Connect”).',
-      'Instalează din Google Play aplicația gratuită **HC Webhook** (Health Connect Webhook).',
-      'Dă-i permisiune de citire pentru **Pași**, **Puls** și **Puls în repaus**.',
+      '**NextMe nu apare în lista Health Connect** și nici nu are cum: e o aplicație web, iar Health Connect acceptă doar aplicații instalate din magazin. De aceea folosim o aplicație-punte care citește din Health Connect și trimite la NextMe.',
+      'Verifică întâi că aplicația ceasului sau a telefonului scrie în Health Connect: în Samsung Health, Fitbit, Google Fit, Withings etc. caută în setări „Health Connect” și activează Pași și Puls.',
+      'Instalează puntea **Health Connect Webhook** (dezvoltator Naveen MC). În Google Play costă o singură dată ~15 $. Gratuit: descarcă APK-ul din pagina proiectului pe GitHub (mcnaveen/health-connect-webhook → Releases).',
+      'Deschide-o și dă-i permisiune de citire pentru **Pași**, **Puls** și **Puls în repaus**.',
       'La **Webhook URL** lipește linkul tău de mai sus.',
-      'Alege sincronizare la interval, de exemplu **la fiecare oră**, sau la ore fixe.',
-      'Apasă **Sync Now** o dată ca să testezi. Pașii apar în NextMe în câteva secunde.',
+      'Alege sincronizare la interval (de exemplu **la fiecare oră**) sau la ore fixe, apoi apasă **Sync Now** o dată ca să testezi.',
     ],
     en: [
-      'Make sure your watch or phone app writes to **Health Connect** (Samsung Health, Fitbit, Google Fit, Withings etc.: look for “Health Connect” in their settings).',
-      'Install the free **HC Webhook** (Health Connect Webhook) app from Google Play.',
-      'Give it read access to **Steps**, **Heart rate** and **Resting heart rate**.',
+      '**NextMe will not show up in Health Connect**, and it can’t: it is a web app, and Health Connect only accepts apps installed from the store. So we use a bridge app that reads Health Connect and sends to NextMe.',
+      'First check that your watch or phone app writes to Health Connect: in Samsung Health, Fitbit, Google Fit, Withings etc. look for “Health Connect” in settings and turn on Steps and Heart rate.',
+      'Install the bridge **Health Connect Webhook** (developer Naveen MC). On Google Play it is a one-time ~$15. Free: download the APK from the project’s GitHub page (mcnaveen/health-connect-webhook → Releases).',
+      'Open it and give it read access to **Steps**, **Heart rate** and **Resting heart rate**.',
       'Under **Webhook URL** paste your link from above.',
-      'Choose an interval sync, for example **every hour**, or fixed times.',
-      'Tap **Sync Now** once to test. Steps show up in NextMe within seconds.',
+      'Choose an interval sync (for example **every hour**) or fixed times, then tap **Sync Now** once to test.',
     ],
   },
 };
@@ -118,8 +118,9 @@ export function SyncScreen() {
             ? 'Ceasuri Garmin, Polar, Withings, Oura, Xiaomi: activează în aplicația lor „Apple Health / Sănătate”, apoi pașii ajung automat și în NextMe. Dacă vezi pașii dublați (telefon + ceas), la pasul 3 adaugă filtrul Sursă = ceasul tău.'
             : 'Garmin, Polar, Withings, Oura, Xiaomi watches: turn on “Apple Health” in their app, and steps then reach NextMe too. If steps look doubled (phone + watch), add a Source = your watch filter in step 3.'}</p>
           : <p className="small muted">{ro
-            ? 'HC Webhook e o aplicație separată, gratuită și open-source; datele merg direct de pe telefonul tău în NextMe. Dacă vezi pașii dublați, lasă în Health Connect o singură aplicație care scrie pași (telefonul sau ceasul).'
-            : 'HC Webhook is a separate, free and open-source app; data goes straight from your phone to NextMe. If steps look doubled, let only one app write steps in Health Connect (the phone or the watch).'}</p>}
+            ? 'Health Connect Webhook e o aplicație separată, open-source, care nu ține de NextMe; datele merg direct de pe telefonul tău în NextMe. Dacă vezi pașii dublați, lasă în Health Connect o singură aplicație care scrie pași (telefonul sau ceasul). Nu vrei să instalezi nimic? Apasă pe cardul Pași și scrie numărul de pe ceas.'
+            : 'Health Connect Webhook is a separate open-source app, not made by NextMe; data goes straight from your phone to NextMe. If steps look doubled, let only one app write steps in Health Connect (the phone or the watch). Rather not install anything? Tap the Steps card and type the number from your watch.'}</p>}
+        {dev === 'android' && <p className="small"><a href="https://play.google.com/store/apps/details?id=com.hcwebhook.app" target="_blank" rel="noopener noreferrer">Google Play ↗</a> · <a href="https://github.com/mcnaveen/health-connect-webhook/releases" target="_blank" rel="noopener noreferrer">GitHub (APK) ↗</a></p>}
       </section>
 
       <section className="card">

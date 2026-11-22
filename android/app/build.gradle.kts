@@ -5,7 +5,7 @@ plugins {
 
 // Release signing: CI provides NM_KEYSTORE (path) + NM_KEY_PASSWORD. Without them the APK is debug-signed.
 val keystorePath: String? = System.getenv("NM_KEYSTORE")
-val keyPassword: String? = System.getenv("NM_KEY_PASSWORD")
+val nmPassword: String? = System.getenv("NM_KEY_PASSWORD")
 
 android {
     namespace = "app.nextme.android"
@@ -22,11 +22,11 @@ android {
 
     signingConfigs {
         create("release") {
-            if (keystorePath != null && keyPassword != null) {
+            if (keystorePath != null && nmPassword != null) {
                 storeFile = file(keystorePath)
-                storePassword = keyPassword
+                storePassword = nmPassword
                 keyAlias = "nextme"
-                this.keyPassword = keyPassword
+                keyPassword = nmPassword
                 storeType = "pkcs12"
             }
         }
@@ -35,7 +35,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = if (keystorePath != null && keyPassword != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            signingConfig = if (keystorePath != null && nmPassword != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
 

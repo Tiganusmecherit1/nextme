@@ -4,6 +4,8 @@ interface Env {
   AI?: Ai;
   AI_DAILY_LIMIT?: string;
   AI_MACHINE_LIMIT?: string;
+  AI_RECIPE_LIMIT?: string;
+  TEXT_MODEL?: string;
   VISION_MODEL?: string;
 }
 
@@ -112,6 +114,24 @@ async function runVision(env: Env, prompt: string, dataUrl: string): Promise<str
   return String(out?.response ?? out?.result?.response ?? '');
 }
 
+// Text generation for pantry recipes. gpt-oss-120b (Responses API format) writes noticeably better recipes than
+// Llama 3.3 in tests; Llama stays as fallback.
+async function runText(env: Env, prompt: string): Promise<string> {
+  if (!env.AI) throw new Error('ai_unavailable');
+  const model = env.TEXT_MODEL || '@cf/openai/gpt-oss-120b';
+  try {
+    if (model.includes('gpt-oss')) {
+      const out: any = await (env.AI as any).run(model, { instructions: 'Answer only with JSON.', input: prompt, reasoning: { effort: 'low' } });
+      const msg = (out?.output || []).find((o: any) => o?.type === 'message');
+      const text = msg?.content?.map((c: any) => c?.text || '').join('') || out?.output_text || '';
+      if (text) return String(text);
+    }
+  } catch (e) { console.error('text model', e); }
+  const out: any = await (env.AI as any).run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 1800, temperature: 0.6 });
+  const r = out?.response ?? out?.choices?.[0]?.message?.content ?? '';
+  return typeof r === 'string' ? r : JSON.stringify(r);
+}
+
 function extractJson(text: string): any {
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
@@ -125,9 +145,12 @@ function extractJson(text: string): any {
 
 // Plate photos and gym-machine scans have separate daily quotas: setting up a gym means many photos at once.
 // Machine scans are counted in the same table under a "gym:" date key (no schema change).
-async function consumeAiQuota(env: Env, userId: number, kind: 'plate' | 'machine' = 'plate') {
-  const limit = kind === 'machine' ? parseInt(env.AI_MACHINE_LIMIT || '30', 10) : parseInt(env.AI_DAILY_LIMIT || '5', 10);
-  const date = (kind === 'machine' ? 'gym:' : '') + todayUTC();
+// Pantry recipe generation has its own quota too, under a "recipe:" key.
+const quotaLimit = (env: Env, kind: 'plate' | 'machine' | 'recipe') =>
+  kind === 'machine' ? parseInt(env.AI_MACHINE_LIMIT || '30', 10) : kind === 'recipe' ? parseInt(env.AI_RECIPE_LIMIT || '5', 10) : parseInt(env.AI_DAILY_LIMIT || '5', 10);
+async function consumeAiQuota(env: Env, userId: number, kind: 'plate' | 'machine' | 'recipe' = 'plate') {
+  const limit = quotaLimit(env, kind);
+  const date = (kind === 'machine' ? 'gym:' : kind === 'recipe' ? 'recipe:' : '') + todayUTC();
   const row = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(userId, date).first<{ count: number }>();
   const used = row?.count ?? 0;
   if (used >= limit) return { ok: false, used, limit };
@@ -357,12 +380,14 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       const prof = await env.DB.prepare('SELECT data FROM profiles WHERE user_id = ?').bind(user.id).first<{ data: string }>();
       const ai = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, todayUTC()).first<{ count: number }>();
       const gym = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, 'gym:' + todayUTC()).first<{ count: number }>();
+      const rec = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, 'recipe:' + todayUTC()).first<{ count: number }>();
       const sync = await env.DB.prepare('SELECT sync_token_hash IS NOT NULL AS on_, last_sync_at FROM users WHERE id = ?').bind(user.id).first<{ on_: number; last_sync_at: string | null }>();
       return json({
         user: { username: user.username, icsToken: user.ics_token },
         profile: prof ? JSON.parse(prof.data) : null,
         ai: { used: ai?.count ?? 0, limit: parseInt(env.AI_DAILY_LIMIT || '5', 10) },
         aiGym: { used: gym?.count ?? 0, limit: parseInt(env.AI_MACHINE_LIMIT || '30', 10) },
+        aiRecipe: { used: rec?.count ?? 0, limit: quotaLimit(env, 'recipe') },
         sync: { enabled: !!sync?.on_, lastAt: sync?.last_sync_at ? sync.last_sync_at.replace(' ', 'T') + 'Z' : null },
       });
     }
@@ -533,6 +558,48 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     if (evDel && method === 'DELETE') {
       await env.DB.prepare('DELETE FROM events WHERE id = ? AND user_id = ?').bind(Number(evDel[1]), user.id).run();
       return json({ ok: true });
+    }
+
+    if (path === '/ai/recipe' && method === 'POST') {
+      const b = await readJson<{ have?: { id: string; name: string }[]; lang?: string; kcal?: number; protein?: number; avoid?: string[]; meal?: string }>(request);
+      const have = (Array.isArray(b.have) ? b.have : [])
+        .filter((x) => x && /^[a-z_]{2,30}$/.test(String(x.id)))
+        .slice(0, 60)
+        .map((x) => ({ id: String(x.id), name: String(x.name || x.id).replace(/[^\p{L}\p{N} ,.()%-]/gu, '').slice(0, 50) }));
+      if (have.length < 2) return err('too_few');
+      if (!env.AI) return err('ai_unavailable', 503);
+      const q = await consumeAiQuota(env, user.id, 'recipe');
+      if (!q.ok) return json({ error: 'limit_reached', used: q.used, limit: q.limit }, 429);
+      const ro = b.lang !== 'en';
+      const kcal = Math.max(250, Math.min(1500, Math.round(Number(b.kcal) || 650)));
+      const protein = Math.max(15, Math.min(90, Math.round(Number(b.protein) || 40)));
+      const meal = ['breakfast', 'main', 'snack'].includes(String(b.meal)) ? String(b.meal) : 'main';
+      const avoid = (Array.isArray(b.avoid) ? b.avoid : []).filter((x) => /^[a-z_ ]{2,30}$/.test(String(x))).slice(0, 8);
+      const ids = new Set([...have.map((x) => x.id), 'garlic']);
+      const prompt =
+        'You are a Romanian home cook and sports nutritionist. Create 3 different, genuinely tasty, protein-rich recipes for ONE portion, ' +
+        `as a ${meal === 'breakfast' ? 'breakfast' : meal === 'snack' ? 'snack or healthy dessert' : 'lunch or dinner main dish'}, ` +
+        'in the style of simple Romanian / Eastern European home cooking (ciorbe, tocănițe, mâncăruri, cuptor, mămăligă etc. when they fit). ' +
+        'Use ONLY ingredients from this list (id: name), plus free staples: salt, pepper, paprika, garlic, herbs, vinegar, lemon, mustard, water. ' +
+        'You do not need to use all of them; 3 to 7 ingredients per recipe is ideal.\n' +
+        have.map((x) => `${x.id}: ${x.name}`).join('\n') +
+        `\nAim for about ${kcal} kcal and at least ${protein} g protein per portion; use realistic raw gram amounts.` +
+        (avoid.length ? ` Avoid: ${avoid.join(', ')}.` : '') +
+        ` Write title and steps in ${ro ? 'Romanian with correct diacritics (ă, â, î, ș, ț)' : 'English'}. Steps: 3 to 6 short, concrete steps with times and temperatures and one flavour trick. ` +
+        (ro ? 'Address the reader with "tu" (e.g. "Călește ceapa"). ' : '') +
+        'In "items", "id" must be the exact id before the colon (e.g. chicken), never the name; garlic may be used with id garlic. ' +
+        'Answer ONLY with JSON: {"recipes":[{"title":"","minutes":0,"items":[{"id":"<id from the list>","grams":0}],"steps":[""]}]}';
+      const data = extractJson(await runText(env, prompt)) || {};
+      const recipes = (Array.isArray(data.recipes) ? data.recipes : []).slice(0, 3).map((r: any) => ({
+        title: String(r.title || '').slice(0, 90),
+        minutes: Math.max(5, Math.min(240, Math.round(Number(r.minutes) || 30))),
+        items: (Array.isArray(r.items) ? r.items : [])
+          .filter((i: any) => ids.has(String(i?.id)))
+          .map((i: any) => ({ id: String(i.id), grams: Math.max(1, Math.min(600, Math.round(Number(i.grams) || 0))) }))
+          .slice(0, 10),
+        steps: (Array.isArray(r.steps) ? r.steps : []).map((x: any) => String(x).slice(0, 300)).slice(0, 8),
+      })).filter((r: any) => r.title && r.items.length >= 2 && r.steps.length);
+      return json({ recipes, used: q.used, limit: q.limit });
     }
 
     if ((path === '/ai/plate' || path === '/ai/machine') && method === 'POST') {

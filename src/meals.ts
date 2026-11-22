@@ -3,23 +3,24 @@ import type { Profile } from './calc';
 
 export interface Nutr { kcal: number; protein: number; carbs: number; fat: number; fiber: number }
 
-export function recipeNutrition(r: Recipe, factor = 1): Nutr {
+export function recipeNutrition(r: Pick<Recipe, 'items'>, factor = 1): Nutr {
   const t = { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
   for (const [id, g] of r.items) {
-    const n = ING[id].n;
+    const n = ING[id]?.n;
+    if (!n) continue;
     const k = (g * factor) / 100;
     t.kcal += n[0] * k; t.protein += n[1] * k; t.carbs += n[2] * k; t.fat += n[3] * k; t.fiber += n[4] * k;
   }
   return { kcal: Math.round(t.kcal), protein: Math.round(t.protein), carbs: Math.round(t.carbs), fat: Math.round(t.fat), fiber: Math.round(t.fiber) };
 }
 
-export function recipeTags(r: Recipe): Set<Tag> {
+export function recipeTags(r: Pick<Recipe, 'items'>): Set<Tag> {
   const s = new Set<Tag>();
   for (const [id] of r.items) for (const t of ING[id].tags || []) s.add(t);
   return s;
 }
 
-export function allowed(r: Recipe, p: Pick<Profile, 'diet' | 'allergies'>) {
+export function allowed(r: Pick<Recipe, 'items'>, p: Pick<Profile, 'diet' | 'allergies'>) {
   const tags = recipeTags(r);
   const no = new Set<Tag>();
   switch (p.diet) {

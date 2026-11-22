@@ -25,6 +25,7 @@ export function parentOf(hash: string): string {
     case 'biohack': case 'lesson': case 'supplements': return '#/learn';
     case 'checkin': case 'calendar': return '#/progress';
     case 'sync': return '#/profile';
+    case 'recipe': return '#/meals/recipes';
     default: return '#/today';
   }
 }

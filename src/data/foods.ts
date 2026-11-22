@@ -66,6 +66,25 @@ export const ING: Record<string, Ingredient> = {
   flax: { ro: 'semințe de in măcinate', en: 'ground flaxseed', n: [534, 18.3, 28.9, 42.2, 27.3] },
   peanut_butter: { ro: 'unt de arahide', en: 'peanut butter', n: [588, 25, 20, 50, 6], tags: ['nuts'] },
   honey: { ro: 'miere', en: 'honey', n: [304, 0.3, 82.4, 0, 0.2] },
+  // Added for the recipe library (USDA FoodData Central SR Legacy, raw unless noted)
+  garlic: { ro: 'usturoi', en: 'garlic', n: [149, 6.4, 33.1, 0.5, 2.1] },
+  leek: { ro: 'praz', en: 'leek', n: [61, 1.5, 14.2, 0.3, 1.8] },
+  barley: { ro: 'arpacaș', en: 'pearl barley', n: [352, 9.9, 77.7, 1.2, 15.6], tags: ['gluten'] },
+  semolina: { ro: 'griș', en: 'semolina', n: [360, 12.7, 72.8, 1.1, 3.9], tags: ['gluten'] },
+  flour: { ro: 'făină albă', en: 'white flour', n: [364, 10.3, 76.3, 1, 2.7], tags: ['gluten'] },
+  breadcrumbs: { ro: 'pesmet', en: 'breadcrumbs', n: [395, 13.4, 72, 5.3, 4.5], tags: ['gluten'] },
+  cocoa: { ro: 'cacao neîndulcită', en: 'unsweetened cocoa', n: [228, 19.6, 57.9, 13.7, 37] },
+  butter: { ro: 'unt', en: 'butter', n: [717, 0.9, 0.1, 81.1, 0], tags: ['dairy'] },
+  pickles: { ro: 'castraveți murați', en: 'pickled cucumbers', n: [11, 0.3, 2.4, 0.2, 1] },
+  cascaval: { ro: 'cașcaval', en: 'cașcaval (yellow cheese)', n: [356, 24.9, 2.2, 27.4, 0], tags: ['dairy'] },
+  greek_yogurt: { ro: 'iaurt grecesc 2%', en: 'Greek yogurt 2%', n: [73, 10, 3.9, 1.9, 0], tags: ['dairy'] },
+  urda: { ro: 'urdă', en: 'urdă (whey cheese, like ricotta)', n: [138, 11.4, 5.1, 7.9, 0], tags: ['dairy'] },
+  chicken_liver: { ro: 'ficat de pui', en: 'chicken liver', n: [119, 16.9, 0.7, 4.8, 0], tags: ['meat'] },
+  trout: { ro: 'păstrăv', en: 'trout', n: [141, 19.9, 0, 6.2, 0], tags: ['fish'] },
+  carp: { ro: 'crap', en: 'carp', n: [127, 17.8, 0, 5.6, 0], tags: ['fish'] },
+  turkey_mince: { ro: 'carne tocată de curcan', en: 'turkey mince', n: [150, 18.7, 0, 8.3, 0], tags: ['meat'] },
+  beef: { ro: 'carne de vită slabă (pulpă)', en: 'lean beef (round)', n: [120, 22.9, 0, 3, 0], tags: ['meat'] },
+  beans_canned: { ro: 'fasole albă la conservă (scursă)', en: 'canned white beans, drained', n: [114, 7.3, 21.1, 0.3, 4.8] },
 };
 
 export interface Recipe {

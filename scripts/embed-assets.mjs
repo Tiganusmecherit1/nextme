@@ -1,7 +1,7 @@
 // Embeds dist/ into worker/assets.gen.ts so the Worker can serve the PWA without the asset-upload API.
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, extname } from 'node:path';
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+const TYPES = { '.woff2': 'font/woff2', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json', '.ico': 'image/x-icon', '.md': 'text/markdown; charset=utf-8' };
 const root = 'dist'; const out = {};
 const walk = (d) => readdirSync(d).forEach((f) => { const p = join(d, f); if (statSync(p).isDirectory()) return walk(p);

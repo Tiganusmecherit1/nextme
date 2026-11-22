@@ -1,52 +1,117 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { todayStr } from '../calc';
 import { getLang, L, t } from '../i18n';
 import { Chips, Disclaimer, go, Header, Sheet } from '../components/ui';
 import { Figure } from '../components/Figure';
 import { exById, MACHINES } from '../data/exercises';
-import { DEFAULT_DAYS, PHASE_INFO, PROGRAM_WEEKS, PROGRAMS, programOf, programWeek, sessionForDate, type Session } from '../plan';
+import { buildPlan, DEFAULT_DAYS, PHASE_INFO, PROGRAM_WEEKS, PROGRAMS, programOf, programWeek, sessionForDate, type Session } from '../plan';
 import { SwapSheet, useLastSets } from './Workout';
 import type { Exercise } from '../data/exercises';
 import { api, ApiError, fileToDataUrl } from '../api';
+import { QuickList, RecoveryList } from './Move';
+import { EditSheet } from './Profile';
 
 const DOW = () => (getLang() === 'ro' ? ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
-export function Train() {
+export function Train({ section = 'program' }: { section?: string }) {
+  const ro = getLang() === 'ro';
+  const segs: [string, string, string][] = [
+    ['program', '#/train', ro ? 'Programul meu' : 'My program'],
+    ['quick', '#/train/quick', ro ? 'Rapid' : 'Quick'],
+    ['recovery', '#/train/recovery', ro ? 'Recuperare' : 'Recovery'],
+  ];
+  const cur = segs.some(([k]) => k === section) ? section : 'program';
+  return (
+    <div className="page">
+      <Header title={t('trainTab')} right={<button className="btn sm ghost" onClick={() => go('#/library')}>📚 {ro ? 'Exerciții' : 'Exercises'}</button>} />
+      <div className="segmented" role="tablist">
+        {segs.map(([k, href, label]) => (
+          <button key={k} role="tab" aria-selected={cur === k} className={cur === k ? 'on' : ''} onClick={() => location.replace(href)}>{label}</button>
+        ))}
+      </div>
+      {cur === 'quick' ? <QuickList /> : cur === 'recovery' ? <RecoveryList /> : <ProgramSection />}
+      <Disclaimer />
+    </div>
+  );
+}
+
+function ProgramSection() {
   const s = useStore();
+  const ro = getLang() === 'ro';
   const today = todayStr();
   const todaySession = sessionForDate(s.profile, s.plan, new Date());
   const [open, setOpen] = useState<string | null>(todaySession?.key ?? s.plan[0]?.key ?? null);
   const [gymOpen, setGymOpen] = useState(false);
+  const [healthOpen, setHealthOpen] = useState(false);
   const days = [...s.profile.trainingDays].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
   const d = s.day(today);
+  const pick = (key: string) => {
+    setOpen(key);
+    setTimeout(() => document.getElementById('sess-' + key)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
 
-  return (
-    <div className="page">
-      <Header title={t('train')} right={<div className="row gap-s">
-        <button className="btn sm ghost" onClick={() => go('#/library')}>📚 {getLang() === 'ro' ? 'Exerciții' : 'Exercises'}</button>
-        {s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️</button>}
-      </div>} />
-      <ProgramCard />
-      <button className="card list-item hero-link bio-link" onClick={() => go('#/biohack')}>
-        <span className="emoji">🧬</span>
-        <div><b>Biohacking</b><p className="small muted">{getLang() === 'ro' ? 'Intervale 4×4, Zona 2, forță minimă, plimbare după masă, gustări viguroase. Doar cu dovezi.' : '4×4 intervals, Zone 2, minimum strength, after-meal walk, vigorous snacks. Evidence only.'}</p></div>
+  const needsHealth = !!s.profile.asked && !s.profile.asked.includes('health');
+  return (<>
+    {needsHealth && (
+      <button className="card list-item warn-soft" onClick={() => setHealthOpen(true)}>
+        <span className="emoji">🩹</span>
+        <div><b>{ro ? 'Înainte de primul antrenament' : 'Before your first workout'}</b><p className="small muted">{ro ? 'Ai vreo accidentare sau afecțiune? Îți adaptez exercițiile.' : 'Any injury or condition? I’ll adapt your exercises.'}</p></div>
         <span className="chev">›</span>
       </button>
-      <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })}</p>
+    )}
+    <ProgramCard />
+    <WeekStrip onPick={pick} />
+    <p className="muted small">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })} · <a href="#/profile/training">{ro ? 'schimbă' : 'change'}</a></p>
 
-      {s.plan.map((sess, i) => (
-        <SessionCard key={sess.key} sess={sess} dayLabel={DOW()[days[i % Math.max(1, days.length)]] ?? ''}
-          isToday={todaySession?.key === sess.key} open={open === sess.key} onToggle={() => setOpen(open === sess.key ? null : sess.key)}
-          done={todaySession?.key === sess.key && !!d.workout_done}
-          onDone={() => s.patchDay(today, { workout_done: 1, workout_minutes: sess.estMinutes })} />
-      ))}
+    {s.plan.map((sess, i) => (
+      <SessionCard key={sess.key} sess={sess} dayLabel={DOW()[days[i % Math.max(1, days.length)]] ?? ''}
+        isToday={todaySession?.key === sess.key} open={open === sess.key} onToggle={() => setOpen(open === sess.key ? null : sess.key)}
+        done={todaySession?.key === sess.key && !!d.workout_done}
+        onDone={() => s.patchDay(today, { workout_done: 1, workout_minutes: sess.estMinutes })} />
+    ))}
 
-      <section className="card small-card">
-        <p className="small">📈 {t('progression')}</p>
-      </section>
-      <Disclaimer />
-      {gymOpen && <MyGym onClose={() => setGymOpen(false)} />}
+    {s.profile.location === 'gym' && (
+      <button className="card list-item" onClick={() => setGymOpen(true)}>
+        <span className="emoji">📷</span>
+        <div><b>{ro ? 'Sala mea: recunoaște un aparat' : 'My gym: identify a machine'}</b><p className="small muted">{ro ? 'Fă o poză unui aparat și află ce exerciții poți face pe el.' : 'Snap a machine and see which exercises it is for.'}</p></div>
+        <span className="chev">›</span>
+      </button>
+    )}
+    <section className="card small-card">
+      <p className="small">📈 {t('progression')}</p>
+    </section>
+    {gymOpen && <MyGym onClose={() => setGymOpen(false)} />}
+    {healthOpen && <EditSheet section="health" title={ro ? 'Sănătate' : 'Health'} onClose={() => setHealthOpen(false)} />}
+  </>);
+}
+
+/** This week at a glance: training days, today, and what's already done. */
+function WeekStrip({ onPick }: { onPick: (key: string) => void }) {
+  const s = useStore();
+  const ro = getLang() === 'ro';
+  const now = new Date();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+  const names = ro ? ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const ymd = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  return (
+    <div className="week-strip">
+      {names.map((n, i) => {
+        const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const sess = sessionForDate(s.profile, s.plan, date);
+        const key = ymd(date);
+        const isToday = key === todayStr();
+        const done = !!s.day(key).workout_done;
+        const past = key < todayStr();
+        return (
+          <button key={i} className={'wd' + (sess ? ' train' : '') + (isToday ? ' today' : '') + (done ? ' done' : '') + (past && sess && !done ? ' missed' : '')}
+            disabled={!sess} onClick={() => sess && onPick(sess.key)} aria-label={sess ? L(sess.title) : undefined}>
+            <span>{n}</span>
+            <b>{date.getDate()}</b>
+            <i>{done ? '✓' : sess ? '●' : ''}</i>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -99,7 +164,7 @@ function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: 
     setSwap(null);
   };
   return (
-    <section className={'card session' + (isToday ? ' today' : '')}>
+    <section id={'sess-' + sess.key} className={'card session' + (isToday ? ' today' : '')}>
       <button className="session-head" onClick={onToggle}>
         <div>
           <p className="eyebrow">{dayLabel}{isToday ? ` · ${t('today')}` : ''}</p>
@@ -192,53 +257,104 @@ export function ExerciseDetail({ id }: { id: string }) {
   );
 }
 
+type ScanRes = { n: number; id: string; alternatives: string[]; confidence: string } | { n: number; error: string };
+const FREE_WEIGHTS = ['dumbbells', 'barbell', 'flat_bench', 'adjustable_bench', 'squat_rack'];
+
+/**
+ * Sala mea: scan machines (camera or many photos from the gallery at once), tick the rest,
+ * and see right away which exercises each training day gets with this equipment.
+ */
 function MyGym({ onClose }: { onClose: () => void }) {
   const s = useStore();
+  const ro = getLang() === 'ro';
   const [eq, setEq] = useState<string[]>(s.profile.gymEquipment);
-  const [scan, setScan] = useState<{ id: string; alternatives: string[]; confidence: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
-  const file = useRef<HTMLInputElement>(null);
+  const [results, setResults] = useState<ScanRes[]>([]);
+  const [busy, setBusy] = useState<string>('');
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null);
+  const cam = useRef<HTMLInputElement>(null);
+  const gallery = useRef<HTMLInputElement>(null);
   const name = (id: string) => { const m = MACHINES.find((x) => x.id === id); return m ? m[getLang()] : id; };
-
-  const onFile = async (f?: File) => {
-    if (!f) return;
-    setBusy(true); setMsg(''); setScan(null);
-    try {
-      const image = await fileToDataUrl(f);
-      const r = await api('/ai/machine', { method: 'POST', body: { image, lang: getLang() } });
-      s.setAi({ used: r.used, limit: r.limit });
-      setScan(r);
-    } catch (e) {
-      const code = e instanceof ApiError ? e.code : '';
-      setMsg(code === 'limit_reached' ? t('aiLimit') : t('aiUnavailable'));
-    } finally { setBusy(false); if (file.current) file.current.value = ''; }
-  };
   const addEq = (id: string) => setEq((x) => (x.includes(id) ? x : [...x, id]));
+  const days = [...s.profile.trainingDays].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+  const preview = useMemo(() => buildPlan({ ...s.profile, gymEquipment: eq }), [s.profile, eq]);
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    const list = Array.from(files).slice(0, 30);
+    const start = results.length;
+    for (let i = 0; i < list.length; i++) {
+      setBusy(ro ? `Analizez poza ${i + 1} din ${list.length}…` : `Analysing photo ${i + 1} of ${list.length}…`);
+      try {
+        const image = await fileToDataUrl(list[i]);
+        const r = await api('/ai/machine', { method: 'POST', body: { image, lang: getLang() } });
+        setQuota({ used: r.used, limit: r.limit });
+        if (r.id !== 'unknown') addEq(r.id);
+        setResults((x) => [...x, { n: start + i + 1, ...r }]);
+      } catch (e) {
+        const code = e instanceof ApiError ? e.code : '';
+        setResults((x) => [...x, { n: start + i + 1, error: code === 'limit_reached' ? t('aiLimit') : t('aiUnavailable') }]);
+        if (code === 'limit_reached') break;
+      }
+    }
+    setBusy('');
+    if (cam.current) cam.current.value = '';
+    if (gallery.current) gallery.current.value = '';
+  };
 
   return (
     <Sheet open onClose={onClose} title={t('myGym')}>
       <section className="card inset">
-        <h3>📷 {t('scanMachine')}</h3>
-        <p className="small muted">{t('scanMachineText')}</p>
-        <input ref={file} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-        <button className="btn" disabled={busy || s.ai.used >= s.ai.limit} onClick={() => file.current?.click()}>{busy ? t('analyzing') : '📷 ' + t('scanMachine')}</button>
-        <p className="small muted">{Math.max(0, s.ai.limit - s.ai.used)} {t('aiLeft')}</p>
-        {msg && <p className="err">{msg}</p>}
-        {scan && (
-          <div className="scan-res">
-            {scan.id !== 'unknown' ? (
-              <p>{t('recognized')}: <b>{name(scan.id)}</b> <button className="btn sm" onClick={() => addEq(scan.id)}>{t('addToGym')}</button></p>
-            ) : <p>{t('notSure')}</p>}
-            {scan.alternatives.map((a) => <button key={a} className="chip" onClick={() => addEq(a)}>+ {name(a)}</button>)}
-          </div>
+        <h3>📷 {ro ? 'Scanează aparatele' : 'Scan the machines'}</h3>
+        <p className="small muted">{ro
+          ? 'Fă câte o poză fiecărui aparat, sau fă-le pe toate cu camera telefonului și alege-le apoi deodată din galerie. Ce recunosc se bifează singur.'
+          : 'Snap each machine, or take them all with your camera and pick them from the gallery at once. What I recognise gets ticked automatically.'}</p>
+        <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFiles(e.target.files)} />
+        <input ref={gallery} type="file" accept="image/*" multiple hidden onChange={(e) => onFiles(e.target.files)} />
+        <div className="row gap">
+          <button className="btn" disabled={!!busy} onClick={() => cam.current?.click()}>📷 {ro ? 'Poză' : 'Photo'}</button>
+          <button className="btn ghost" disabled={!!busy} onClick={() => gallery.current?.click()}>🖼 {ro ? 'Din galerie' : 'From gallery'}</button>
+        </div>
+        <p className="small muted">{busy || (quota ? (ro ? `${Math.max(0, quota.limit - quota.used)} scanări de aparate rămase azi (separat de pozele cu mâncare)` : `${Math.max(0, quota.limit - quota.used)} machine scans left today (separate from food photos)`)
+          : (ro ? 'Până la 30 de aparate pe zi, separat de pozele cu mâncare.' : 'Up to 30 machines a day, separate from food photos.'))}</p>
+        {results.length > 0 && (
+          <ul className="scan-list">
+            {results.map((r) => (
+              <li key={r.n}>
+                <span className="muted small">#{r.n}</span>
+                {'error' in r ? <span className="err">{r.error}</span>
+                  : r.id !== 'unknown' ? (
+                    <span>✓ <b>{name(r.id)}</b>{r.confidence === 'low' ? <span className="small muted"> · {ro ? 'nesigur, verifică' : 'unsure, check'}</span> : null}
+                      {eq.includes(r.id) && <button className="link small inline" onClick={() => setEq((x) => x.filter((y) => y !== r.id))}>{ro ? 'scoate' : 'remove'}</button>}</span>
+                  ) : <span>{t('notSure')}</span>}
+                {!('error' in r) && r.alternatives.filter((a) => !eq.includes(a)).map((a) => <button key={a} className="chip sm" onClick={() => addEq(a)}>+ {name(a)}</button>)}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
-      <p className="small muted">{t('myGymText')}</p>
+
+      <div className="row between section-row">
+        <h3>{ro ? `Echipamentul tău · ${eq.length || (ro ? 'tot' : 'all')}` : `Your equipment · ${eq.length || 'all'}`}</h3>
+        {FREE_WEIGHTS.some((x) => !eq.includes(x)) && <button className="link small inline" onClick={() => setEq((x) => [...new Set([...x, ...FREE_WEIGHTS])])}>+ {ro ? 'greutăți libere' : 'free weights'}</button>}
+      </div>
+      <p className="small muted">{ro
+        ? 'Programul folosește doar ce e bifat aici. Nu uita ganterele, bara, banca și rack-ul, dacă sala le are. Nimic bifat = sală standard completă.'
+        : 'The plan only uses what is ticked here. Don’t forget dumbbells, barbell, bench and rack if your gym has them. Nothing ticked = full standard gym.'}</p>
       <Chips multi options={MACHINES.map((m) => ({ v: m.id, label: m[getLang()] }))} value={eq} onChange={setEq} />
+
+      <section className="card inset gym-preview">
+        <h3>🗓 {ro ? 'Programul tău cu aceste aparate' : 'Your program with this equipment'}</h3>
+        {preview.map((sess, i) => (
+          <div key={sess.key} className="gp-day">
+            <p className="eyebrow">{DOW()[days[i % Math.max(1, days.length)]] ?? ''} · {L(sess.title)}</p>
+            <p className="small">{sess.exercises.map((x) => L(x.ex.name)).join(' · ')}</p>
+          </div>
+        ))}
+      </section>
+
       <div className="row gap sticky-actions">
         <button className="btn ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn" onClick={async () => { await s.saveProfile({ ...s.profile, gymEquipment: eq }); onClose(); }}>{t('save')}</button>
+        <button className="btn" disabled={!!busy} onClick={async () => { await s.saveProfile({ ...s.profile, gymEquipment: eq }); onClose(); }}>{t('save')}</button>
       </div>
     </Sheet>
   );

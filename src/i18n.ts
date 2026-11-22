@@ -20,6 +20,7 @@ const D = {
   start: ['Începe', 'Start'],
   today: ['Azi', 'Today'],
   train: ['Antrenament', 'Workout'],
+  trainTab: ['Antrenează', 'Train'],
   move: ['Mișcare', 'Move'],
   meals: ['Mese', 'Meals'],
   calendar: ['Calendar', 'Calendar'],

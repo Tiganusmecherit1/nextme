@@ -8,6 +8,7 @@ import { EXERCISES, type Exercise } from '../data/exercises';
 import { alternatives, suggest, type Prescribed } from '../plan';
 import { api } from '../api';
 import { beep, keepAwake, unlockAudio } from '../beep';
+import { DoneCard } from '../components/DoneCard';
 
 /* ---------- last logged sets per exercise (shared cache) ---------- */
 type LastSets = Record<string, { date: string; sets: { kg: number | null; reps: number }[] }>;
@@ -91,12 +92,9 @@ export function WorkoutPlayer({ sessKey }: { sessKey: string }) {
     return (
       <div className="page">
         <Header title={ro ? 'Gata!' : 'Done!'} />
-        <section className="card tile-wide accent-coral">
-          <h2 className="cheer">{ro ? 'Antrenament terminat 💪' : 'Workout complete 💪'}</h2>
-          <p>{finished.minutes} min · {finished.sets} {ro ? 'serii' : 'sets'}{finished.volume ? ` · ${finished.volume.toLocaleString()} kg ${ro ? 'ridicate în total' : 'lifted in total'}` : ''}</p>
-          <p className="small muted">{ro ? 'Data viitoare îți propun greutățile pe baza a ce ai făcut azi.' : 'Next time I’ll suggest weights based on what you did today.'}</p>
-        </section>
-        <button className="btn full" onClick={() => go('#/today')}>{ro ? 'Înapoi la Azi' : 'Back to Today'}</button>
+        <DoneCard title={ro ? 'Antrenament terminat 💪' : 'Workout complete 💪'}
+          stats={`${finished.minutes} min · ${finished.sets} ${ro ? 'serii' : 'sets'}${finished.volume ? ` · ${finished.volume.toLocaleString()} kg ${ro ? 'ridicate în total' : 'lifted in total'}` : ''}`}
+          note={ro ? 'Data viitoare îți propun greutățile pe baza a ce ai făcut azi.' : 'Next time I’ll suggest weights based on what you did today.'} />
         <Disclaimer />
       </div>
     );

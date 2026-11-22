@@ -3,10 +3,12 @@ import { useStore } from '../store';
 import { todayStr } from '../calc';
 import { getLang, L } from '../i18n';
 import { Disclaimer, go, Header } from '../components/ui';
+import { DoneCard } from '../components/DoneCard';
+import { withMove } from '../activity';
 import { Figure } from '../components/Figure';
 import { exById } from '../data/exercises';
 import { beep, keepAwake, unlockAudio } from '../beep';
-import { BIO_TOPICS, BIO_WORKOUTS, bioTopic, bioWorkout, HR_SOURCES, needsClearance, zones, type BioWorkout, type Evidence, type Segment } from '../data/biohacking';
+import { BIO_TOPICS, bioTopic, bioWorkout, HR_SOURCES, needsClearance, zones, type BioWorkout, type Evidence, type Segment } from '../data/biohacking';
 
 const EVID: Record<Evidence, { ro: string; en: string; cls: string }> = {
   rct: { ro: 'Studii controlate', en: 'Controlled trials', cls: 'ev-rct' },
@@ -34,7 +36,6 @@ export function Biohack() {
   const s = useStore();
   const ro = getLang() === 'ro';
   const z = zones(s.profile);
-  const d = s.day(todayStr());
   const [open, setOpen] = useState<string | null>(null);
   return (
     <div className="page">
@@ -69,16 +70,11 @@ export function Biohack() {
         </section>
       )}
 
-      <h2 className="section-title">🏃 {ro ? 'Antrenamente biohacking' : 'Biohacking workouts'}</h2>
-      <div className="tiles">
-        {BIO_WORKOUTS.map((w) => (
-          <button key={w.id} className="card tile routine-tile bio-tile" onClick={() => go('#/bio/' + w.id)}>
-            <span className="emoji">{w.icon}</span>
-            <h3>{L(w.title)}</h3>
-            <p className="small muted">~{totalMin(w.build(w.defaultVariant, s.profile))} min{d.moves.includes('bio_' + w.id) ? ' · ✓' : ''}</p>
-          </button>
-        ))}
-      </div>
+      <button className="card list-item hero-link" onClick={() => go('#/train/quick')}>
+        <span className="emoji">🏃</span>
+        <div><b>{ro ? 'Antrenamentele ghidate' : 'Guided workouts'}</b><p className="small muted">{ro ? 'Le găsești în Antrenează → Rapid: 4×4, Zona 2, plimbare după masă, VILPA, forță minimă.' : 'In Train → Quick: 4×4, Zone 2, after-meal walk, VILPA, minimum strength.'}</p></div>
+        <span className="chev">›</span>
+      </button>
 
       <h2 className="section-title">📖 {ro ? 'Ce spun studiile' : 'What the studies say'}</h2>
       {BIO_TOPICS.map((tp) => {
@@ -133,7 +129,7 @@ export function BioWorkoutPlayer({ id }: { id: string }) {
     release.current();
     const today = todayStr();
     const d = s.day(today);
-    if (!d.moves.includes('bio_' + id)) s.patchDay(today, { moves: [...d.moves, 'bio_' + id] });
+    s.patchDay(today, { moves: withMove(d, 'bio_' + id, segs.reduce((a, x) => a + x.sec, 0) / 60) });
   };
 
   useEffect(() => {
@@ -196,10 +192,7 @@ export function BioWorkoutPlayer({ id }: { id: string }) {
           </section>
         )}
         {run.done ? (
-          <>
-            <p className="center">{ro ? `${totalMin(segs)} minute bifate în ziua de azi. Bravo!` : `${totalMin(segs)} minutes logged for today. Well done!`}</p>
-            <button className="btn full" onClick={() => { setRun(null); go('#/biohack'); }}>{ro ? 'Gata' : 'Done'}</button>
-          </>
+          <DoneCard title={ro ? 'Bravo! 💪' : 'Well done! 💪'} stats={ro ? `${totalMin(segs)} minute bifate în ziua de azi` : `${totalMin(segs)} minutes logged for today`} />
         ) : (
           <div className="row gap">
             <button className="btn ghost" onClick={stop}>■ Stop</button>

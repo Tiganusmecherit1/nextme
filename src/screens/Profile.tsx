@@ -4,6 +4,7 @@ import { api } from '../api';
 import { getLang, t } from '../i18n';
 import { Chips, Disclaimer, go, Header, Sheet } from '../components/ui';
 import { enableReminders, remindersEnabled } from '../reminders';
+import { APK_URL, inAndroidApp } from './Sync';
 
 export function ProfileScreen({ onRedo }: { onRedo: () => void }) {
   const s = useStore();
@@ -33,7 +34,7 @@ export function ProfileScreen({ onRedo }: { onRedo: () => void }) {
       <section className="card">
         <h3>📲 {t('install')}</h3>
         <p className="small muted">{t('installIos')}</p>
-        <p className="small muted">Android: Chrome → ⋮ → {lang === 'ro' ? '„Instalează aplicația”' : '“Install app”'}.</p>
+        {!inAndroidApp() && <p className="small"><a href={APK_URL}>🤖 {lang === 'ro' ? 'Android: descarcă aplicația NextMe (cu pași automați)' : 'Android: download the NextMe app (with automatic steps)'}</a></p>}
       </section>
       <button className="btn full ghost" onClick={onRedo}>{t('editProfile')}</button>
       <button className="btn full ghost" onClick={() => setDisc(true)}>{t('disclaimerTitle')}</button>

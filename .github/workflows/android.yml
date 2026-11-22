@@ -1,0 +1,71 @@
+# Builds the NextMe Android app (WebView + Health Connect bridge) and publishes the APK as a GitHub release.
+name: Android APK
+
+on:
+  push:
+    branches: [main, 'claude/nextme-android']
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      # Signing key: created once, protected by the ANDROID_KEY_PASSWORD repository secret, and kept in the repo
+      # so every build is signed the same way (needed for updates). Without the secret the APK is debug-signed.
+      - name: Prepare signing key
+        env:
+          PW: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$PW" ]; then echo "No ANDROID_KEY_PASSWORD secret: building a debug-signed APK."; exit 0; fi
+          if [ ! -f android/nextme-release.p12 ]; then
+            keytool -genkeypair -storetype PKCS12 -keystore android/nextme-release.p12 -alias nextme \
+              -keyalg RSA -keysize 4096 -validity 36500 -storepass "$PW" -keypass "$PW" -dname "CN=NextMe"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add android/nextme-release.p12
+            git commit -m "Add password-protected Android signing key [skip ci]"
+            git push
+          fi
+          echo "NM_KEYSTORE=$GITHUB_WORKSPACE/android/nextme-release.p12" >> "$GITHUB_ENV"
+          echo "NM_KEY_PASSWORD=$PW" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        working-directory: android
+        env:
+          NM_VERSION_CODE: ${{ github.run_number }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Rename
+        run: cp android/app/build/outputs/apk/release/app-release.apk NextMe.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NextMe-apk
+          path: NextMe.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v${{ github.run_number }}
+          name: NextMe Android ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: 'true'
+          body: |
+            NextMe for Android: the NextMe app with automatic steps and heart rate from Health Connect.
+            Download NextMe.apk below, open it, and allow installing from this source when Android asks.
+          files: NextMe.apk

@@ -30,6 +30,26 @@ const TEMPLATES: Record<string, { title: { ro: string; en: string }; slots: Slot
   legs: { title: { ro: 'Picioare', en: 'Legs' }, slots: ['squat', 'hinge', 'lunge', 'quads', 'hamstrings', 'calves', 'glutes'] },
 };
 
+/* ---------- Ready-made programs ---------- */
+export interface Program { id: string; days?: number; split?: string[]; minutes?: number; home?: boolean; older?: boolean;
+  title: { ro: string; en: string }; text: { ro: string; en: string } }
+export const PROGRAMS: Program[] = [
+  { id: 'auto', title: { ro: 'Făcut pentru tine', en: 'Made for you' },
+    text: { ro: 'Construit din zilele, echipamentul, obiectivul și vârsta ta.', en: 'Built from your days, equipment, goal and age.' } },
+  { id: 'full3', days: 3, split: ['fullA', 'fullB', 'fullA'], title: { ro: 'Full body · 3 zile', en: 'Full body · 3 days' },
+    text: { ro: 'Tot corpul, de 3 ori pe săptămână. Cel mai bun început: fiecare mușchi lucrează de 2–3 ori pe săptămână.', en: 'Whole body, 3 times a week. The best start: every muscle trains 2–3 times a week.' } },
+  { id: 'ul4', days: 4, split: ['upper', 'lower', 'upper', 'lower'], title: { ro: 'Sus / Jos · 4 zile', en: 'Upper / Lower · 4 days' },
+    text: { ro: 'Două zile pentru trunchiul superior, două pentru picioare. Pentru cine are deja câteva luni de sală.', en: 'Two upper-body days, two lower-body days. For people with a few months of training.' } },
+  { id: 'ppl', days: 6, split: ['push', 'pull', 'legs', 'push', 'pull', 'legs'], title: { ro: 'Împins / Tras / Picioare · 6 zile', en: 'Push / Pull / Legs · 6 days' },
+    text: { ro: 'Volum mare, pentru avansați și masă musculară. Cere somn și recuperare bune.', en: 'High volume, for advanced lifters and muscle gain. Needs good sleep and recovery.' } },
+  { id: 'home20', days: 3, split: ['fullA', 'fullB', 'fullA'], minutes: 20, home: true, title: { ro: '20 de minute acasă · 3 zile', en: '20 minutes at home · 3 days' },
+    text: { ro: 'Scurt, fără sală: greutatea corpului plus ce ai acasă.', en: 'Short, no gym: bodyweight plus whatever you have at home.' } },
+  { id: 'older', days: 3, split: ['fullA', 'fullB', 'fullA'], older: true, title: { ro: 'Forță + echilibru 60+ · 3 zile', en: 'Strength + balance 60+ · 3 days' },
+    text: { ro: 'Exerciții stabile, 2 serii de 10–15 și echilibru în fiecare zi; reduce riscul de cădere (Sherrington 2019).', en: 'Stable exercises, 2 sets of 10–15 and balance every day; lowers fall risk (Sherrington 2019).' } },
+];
+export const DEFAULT_DAYS: Record<number, number[]> = { 1: [3], 2: [1, 4], 3: [1, 3, 5], 4: [1, 2, 4, 5], 5: [1, 2, 3, 5, 6], 6: [1, 2, 3, 4, 5, 6], 7: [0, 1, 2, 3, 4, 5, 6] };
+export const programOf = (p: Profile) => PROGRAMS.find((x) => x.id === p.program) ?? PROGRAMS[0];
+
 function splitFor(days: number): string[] {
   if (days <= 1) return ['fullA'];
   if (days === 2) return ['fullA', 'fullB'];
@@ -61,7 +81,7 @@ function pick(slot: Slot, p: Profile, avail: Set<string>, used: Set<string>, var
       !used.has(e.id)
   );
   if (!cands.length) return null;
-  const older = ageOf(p) >= 60;
+  const older = ageOf(p) >= 60 || programOf(p).older === true;
   // Scoring: machines/stable options for beginners and 60+, free weights for advanced; vary between days.
   const score = (e: Exercise) => {
     let s = 0;
@@ -78,7 +98,7 @@ function pick(slot: Slot, p: Profile, avail: Set<string>, used: Set<string>, var
 }
 
 export function prescription(p: Profile, ex: Exercise): { sets: number; reps: string; restSec: number } {
-  const older = ageOf(p) >= 60;
+  const older = ageOf(p) >= 60 || programOf(p).older === true;
   const lvl = levelNum(p);
   const timed = ex.slot === 'core' || ex.slot === 'balance' || ex.id === 'wall_sit';
   if (timed) {
@@ -170,13 +190,15 @@ export function suggest(p: Profile, ex: Exercise, rx: Prescribed | { sets: numbe
   return { kg: lastKg, reps: Math.min(hi, best + 1), note: { ro: `${lastKg} kg, încearcă cu o repetare în plus.`, en: `${lastKg} kg, aim for one more rep.` } };
 }
 
-export function buildPlan(p: Profile, date = new Date()): Session[] {
+export function buildPlan(profile: Profile, date = new Date()): Session[] {
+  const prog = programOf(profile);
+  const p: Profile = { ...profile, ...(prog.minutes ? { sessionMinutes: prog.minutes } : {}), ...(prog.home ? { location: 'home' as const } : {}) };
   const { phase } = programWeek(p, date);
   const days = Math.max(1, p.trainingDays.length || 3);
-  const split = splitFor(days);
+  const split = prog.split ?? splitFor(days);
   const avail = availableEquipment(p);
-  const older = ageOf(p) >= 60;
-  const warmupMin = older ? 8 : 6;
+  const older = ageOf(p) >= 60 || prog.older === true;
+  const warmupMin = prog.minutes && prog.minutes <= 25 ? 4 : older ? 8 : 6;
   const cooldown = 3;
   const wantFinisher = (p.goal === 'fat_loss' || p.goal === 'wellness') && p.sessionMinutes >= 40;
   const budget = p.sessionMinutes - warmupMin - cooldown - (wantFinisher ? 10 : 0);
@@ -193,7 +215,8 @@ export function buildPlan(p: Profile, date = new Date()): Session[] {
       if (!picked) continue;
       const sw = p.swaps?.[picked.id];
       const e = (sw && EXERCISES.find((x) => x.id === sw && x.equip.every((q) => avail.has(q)))) || picked;
-      const rx = applyPhase(prescription(p, e), e, phase, p);
+      const base = applyPhase(prescription(p, e), e, phase, p);
+      const rx = prog.minutes && prog.minutes <= 25 ? { ...base, restSec: Math.min(base.restSec, 45) } : base;
       const per = rx.sets * (0.75 + rx.restSec / 60) + 1;
       if (minutes + per > budget && list.length >= 3) break;
       used.add(e.id);

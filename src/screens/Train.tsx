@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { todayStr } from '../calc';
 import { getLang, L, t } from '../i18n';
 import { Chips, Disclaimer, go, Header, Sheet } from '../components/ui';
 import { Figure } from '../components/Figure';
 import { exById, MACHINES } from '../data/exercises';
-import { PHASE_INFO, PROGRAM_WEEKS, programWeek, sessionForDate, type Session } from '../plan';
+import { DEFAULT_DAYS, PHASE_INFO, PROGRAM_WEEKS, PROGRAMS, programOf, programWeek, sessionForDate, type Session } from '../plan';
 import { SwapSheet, useLastSets } from './Workout';
 import type { Exercise } from '../data/exercises';
 import { api, ApiError, fileToDataUrl } from '../api';
@@ -23,7 +23,10 @@ export function Train() {
 
   return (
     <div className="page">
-      <Header title={t('train')} right={s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️ {t('myGym')}</button>} />
+      <Header title={t('train')} right={<div className="row gap-s">
+        <button className="btn sm ghost" onClick={() => go('#/library')}>📚 {getLang() === 'ro' ? 'Exerciții' : 'Exercises'}</button>
+        {s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️</button>}
+      </div>} />
       <ProgramCard />
       <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })}</p>
 
@@ -48,12 +51,34 @@ function ProgramCard() {
   const ro = getLang() === 'ro';
   const pw = programWeek(s.profile);
   const info = PHASE_INFO[pw.phase];
+  const prog = programOf(s.profile);
+  const [pick, setPick] = useState(false);
+  const choose = async (id: string) => {
+    const pr = PROGRAMS.find((x) => x.id === id)!;
+    const days = pr.days && s.profile.trainingDays.length !== pr.days ? DEFAULT_DAYS[pr.days] : s.profile.trainingDays;
+    await s.saveProfile({ ...s.profile, program: id, programStart: todayStr(), trainingDays: days });
+    setPick(false);
+  };
   return (
     <section className="card program-card">
-      <p className="eyebrow">{ro ? `Programul tău · ciclul ${pw.cycle}` : `Your program · cycle ${pw.cycle}`}</p>
+      <div className="row between">
+        <p className="eyebrow">{L(prog.title)} · {ro ? `ciclul ${pw.cycle}` : `cycle ${pw.cycle}`}</p>
+        <button className="link small" onClick={() => setPick(true)}>{ro ? 'Schimbă' : 'Change'}</button>
+      </div>
       <h2>{ro ? `Săptămâna ${pw.week} din ${PROGRAM_WEEKS}` : `Week ${pw.week} of ${PROGRAM_WEEKS}`} · {L(info.name)}</h2>
       <div className="weeks">{Array.from({ length: PROGRAM_WEEKS }, (_, i) => <span key={i} className={'wk' + (i + 1 < pw.week ? ' past' : i + 1 === pw.week ? ' now' : '') + (i + 1 === PROGRAM_WEEKS ? ' deload' : '')} />)}</div>
       <p className="small muted">{L(info.text)}</p>
+      {pick && (
+        <Sheet open onClose={() => setPick(false)} title={ro ? 'Alege programul' : 'Choose a program'}>
+          <p className="small muted">{ro ? 'Schimbarea pornește un ciclu nou de 8 săptămâni. Dacă programul are alt număr de zile, îți ajustez zilele (le poți schimba din profil).' : 'Changing starts a new 8-week cycle. If the program has a different number of days, I adjust your days (you can change them in your profile).'}</p>
+          {PROGRAMS.map((x) => (
+            <button key={x.id} className={'card inset list-item prog-item' + (x.id === prog.id ? ' sel' : '')} onClick={() => choose(x.id)}>
+              <div><b>{L(x.title)}</b><p className="small muted">{L(x.text)}</p></div>
+              {x.id === prog.id && <span className="ok">✓</span>}
+            </button>
+          ))}
+        </Sheet>
+      )}
     </section>
   );
 }
@@ -109,7 +134,25 @@ function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: 
 
 export function ExerciseDetail({ id }: { id: string }) {
   const ex = exById(id);
+  const ro = getLang() === 'ro';
+  const [hist, setHist] = useState<{ date: string; set_no: number; kg: number | null; reps: number }[] | null>(null);
+  useEffect(() => { api<{ items: any[] }>('/sets/' + id).then((r) => setHist(r.items)).catch(() => setHist([])); }, [id]);
   if (!ex) return null;
+  const timedEx = ex.slot === 'core' || ex.slot === 'balance' || ex.id === 'wall_sit';
+  // one point per day: heaviest set (or most reps/seconds for bodyweight)
+  const days = Object.values((hist ?? []).reduce<Record<string, { date: string; kg: number; reps: number; e1rm: number; sets: string[] }>>((acc, x) => {
+    const d = (acc[x.date] ??= { date: x.date, kg: 0, reps: 0, e1rm: 0, sets: [] });
+    d.kg = Math.max(d.kg, x.kg ?? 0);
+    d.reps = Math.max(d.reps, x.reps);
+    if (x.kg) d.e1rm = Math.max(d.e1rm, x.kg * (1 + x.reps / 30)); // Epley estimate
+    d.sets.push(x.kg ? `${x.kg}×${x.reps}` : `${x.reps}${timedEx ? ' s' : ''}`);
+    return acc;
+  }, {}));
+  const weighted = days.some((d) => d.kg > 0);
+  const vals = days.map((d) => (weighted ? d.kg : d.reps));
+  const best = { kg: Math.max(0, ...days.map((d) => d.kg)), reps: Math.max(0, ...days.map((d) => d.reps)), e1rm: Math.round(Math.max(0, ...days.map((d) => d.e1rm))) };
+  const W = 300, H = 110, min = Math.min(...vals), max = Math.max(...vals);
+  const pts = vals.map((v, i) => `${vals.length === 1 ? W / 2 : (i / (vals.length - 1)) * (W - 20) + 10},${H - 10 - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 30)}`).join(' ');
   return (
     <div className="page">
       <Header title={L(ex.name)} back />
@@ -117,7 +160,27 @@ export function ExerciseDetail({ id }: { id: string }) {
       <section className="card">
         <p className="eyebrow">{L(ex.muscles)}</p>
         <ol className="cues">{L(ex.cues).map((c, i) => <li key={i}>{c}</li>)}</ol>
-        <p className="small muted">{getLang() === 'ro' ? 'Respiră constant: expiră la efort. Oprește-te la durere ascuțită, amețeală sau durere în piept.' : 'Breathe steadily: exhale on effort. Stop with sharp pain, dizziness or chest pain.'}</p>
+        <p className="small muted">{ro ? 'Respiră constant: expiră la efort. Oprește-te la durere ascuțită, amețeală sau durere în piept.' : 'Breathe steadily: exhale on effort. Stop with sharp pain, dizziness or chest pain.'}</p>
+      </section>
+      <section className="card">
+        <h3>📈 {ro ? 'Progresul tău' : 'Your progress'}</h3>
+        {hist === null ? <p className="muted small">…</p> : days.length === 0 ? (
+          <p className="small muted">{ro ? 'Încă nu ai serii notate. Fă un antrenament ghidat și apare aici.' : 'No sets logged yet. Do a guided workout and it shows up here.'}</p>
+        ) : (<>
+          <div className="pr-row">
+            {weighted && <div><b>{best.kg} kg</b><span className="small muted">{ro ? 'cea mai mare greutate' : 'heaviest'}</span></div>}
+            <div><b>{best.reps}{timedEx ? ' s' : ''}</b><span className="small muted">{timedEx ? (ro ? 'cel mai lung' : 'longest') : (ro ? 'cele mai multe repetări' : 'most reps')}</span></div>
+            {weighted && best.e1rm > 0 && <div><b>~{best.e1rm} kg</b><span className="small muted">{ro ? '1 repetare max. (estimat)' : '1-rep max (estimate)'}</span></div>}
+          </div>
+          {days.length > 1 && (
+            <svg viewBox={`0 0 ${W} ${H}`} className="hist-chart" role="img" aria-label={ro ? 'Grafic progres' : 'Progress chart'}>
+              <polyline points={pts} fill="none" stroke="var(--coral)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              {pts.split(' ').map((p, i) => { const [x, y] = p.split(','); return <circle key={i} cx={x} cy={y} r="4" fill="var(--coral)" />; })}
+            </svg>
+          )}
+          <ul className="hist-list">{days.slice(-8).reverse().map((d) => <li key={d.date}><span className="muted small">{new Date(d.date + 'T00:00:00').toLocaleDateString(ro ? 'ro-RO' : 'en-GB', { day: 'numeric', month: 'short' })}</span> {d.sets.join(' · ')}</li>)}</ul>
+          {weighted && <p className="small muted">{ro ? '1RM estimat cu formula Epley; e doar orientativ, nu-l testa fără supraveghere.' : '1RM estimated with the Epley formula; a rough guide only, don’t test it unsupervised.'}</p>}
+        </>)}
       </section>
       <Disclaimer />
     </div>

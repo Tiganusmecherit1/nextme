@@ -33,6 +33,8 @@ export interface Profile {
   programStart?: string;
   /** permanent exercise swaps: original exercise id → replacement id */
   swaps?: Record<string, string>;
+  /** chosen program template; 'auto' (default) builds from days/equipment/goal */
+  program?: string;
 }
 
 export const ageOf = (p: Pick<Profile, 'birthYear'>) => new Date().getFullYear() - p.birthYear;

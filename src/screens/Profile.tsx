@@ -4,7 +4,7 @@ import { api } from '../api';
 import { ageOf, todayStr, type Profile } from '../calc';
 import { getLang, t, type Key } from '../i18n';
 import { Chips, Disclaimer, go, Header, Sheet } from '../components/ui';
-import { enableReminders, remindersEnabled } from '../reminders';
+import { disableReminders, enableReminders, remindersEnabled, type EnableResult } from '../reminders';
 import { stepGoal } from '../activity';
 import { APK_URL, inAndroidApp } from './Sync';
 import { BodyFields, DietFields, GoalFields, HealthFields, TrainingFields, type FieldProps } from './Onboarding';
@@ -17,6 +17,7 @@ export function ProfileScreen({ open }: { open?: string }) {
   const s = useStore();
   const [disc, setDisc] = useState(false);
   const [rem, setRem] = useState(remindersEnabled());
+  const [remMsg, setRemMsg] = useState<Exclude<EnableResult, 'on'> | null>(null);
   const [edit, setEdit] = useState<Section | null>(SECTIONS.includes(open as Section) ? (open as Section) : null);
   const ro = getLang() === 'ro';
   const p = s.profile;
@@ -55,8 +56,14 @@ export function ProfileScreen({ open }: { open?: string }) {
       <section className="card">
         <h3>💧 {t('reminders')}</h3>
         <p className="small muted">{t('remindersOn')}</p>
-        {rem ? <p className="ok">✓ {ro ? 'Active' : 'On'}</p>
-          : <button className="btn sm" onClick={async () => setRem(await enableReminders())}>{t('enable')}</button>}
+        {rem ? <p className="ok">✓ {ro ? 'Active' : 'On'} · <button className="link" style={{ width: 'auto', padding: 0 }} onClick={() => { disableReminders(); setRem(false); }}>{ro ? 'Oprește' : 'Turn off'}</button></p>
+          : <button className="btn sm" onClick={async () => { const r = await enableReminders(); setRem(r === 'on'); setRemMsg(r === 'on' ? null : r); }}>{t('enable')}</button>}
+        {remMsg && <p className="small warn-t">{{
+          denied: ro ? 'Notificările sunt blocate. Deschide Setări telefon → Aplicații → NextMe (sau browserul) → Notificări → Permite, apoi apasă din nou Activează.' : 'Notifications are blocked. Open phone Settings → Apps → NextMe (or your browser) → Notifications → Allow, then tap Enable again.',
+          update_app: ro ? 'Ai o versiune mai veche a aplicației Android. Descarcă versiunea nouă de mai jos și instalează-o peste cea veche.' : 'Your Android app is an older version. Download the new one below and install it over the old one.',
+          ios_install: ro ? 'Pe iPhone, notificările merg doar dacă adaugi NextMe pe ecranul principal (Safari → Partajează → Adaugă pe ecranul principal) și îl deschizi de acolo.' : 'On iPhone, notifications only work after you add NextMe to the Home Screen (Safari → Share → Add to Home Screen) and open it from there.',
+          unsupported: ro ? 'Browserul acesta nu permite notificări. Încearcă aplicația Android sau Chrome.' : 'This browser does not support notifications. Try the Android app or Chrome.',
+        }[remMsg]}{remMsg === 'update_app' && <> <a href={APK_URL}>{ro ? 'Descarcă NextMe.apk' : 'Download NextMe.apk'}</a></>}</p>}
       </section>
       <section className="card">
         <h3>{t('language')}</h3>

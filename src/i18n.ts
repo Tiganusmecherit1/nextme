@@ -83,7 +83,7 @@ const D = {
   addWater: ['+250 ml', '+250 ml'],
   waterGoal: ['Obiectiv apă', 'Water goal'],
   reminders: ['Mementouri apă (9–18)', 'Water reminders (9–18)'],
-  remindersOn: ['Mementouri active cât timp aplicația e deschisă sau în fundal.', 'Reminders active while the app is open or in the background.'],
+  remindersOn: ['O notificare pe oră între 9 și 18, doar până bei apa zilei. În aplicația Android merg și cu aplicația închisă.', 'One notification an hour from 9 to 18, only until you reach today’s water goal. In the Android app they work even when it is closed.'],
   enable: ['Activează', 'Enable'],
   logSteps: ['Introdu pașii de azi', 'Enter today’s steps'],
   autoSynced: ['sincronizat automat', 'synced automatically'],

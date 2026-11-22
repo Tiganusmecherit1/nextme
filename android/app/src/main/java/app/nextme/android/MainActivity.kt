@@ -54,6 +54,16 @@ class MainActivity : ComponentActivity() {
         fileCallback = null
     }
 
+    private val notifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok) WaterReminder.enable(this) else WaterReminder.disable(this)
+        notifyWater()
+    }
+
+    private fun notifyWater() {
+        val on = WaterReminder.enabled(this) && WaterReminder.canNotify(this)
+        runOnUiThread { web.evaluateJavascript("window.dispatchEvent(new CustomEvent('nextme-water',{detail:{on:$on}}))", null) }
+    }
+
     private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
         geoCallback?.let { (origin, cb) -> cb.invoke(origin, ok, false) }
         geoCallback = null
@@ -181,6 +191,26 @@ class MainActivity : ComponentActivity() {
             HealthSync.setSyncUrl(this@MainActivity, null)
             SyncWorker.cancel(this@MainActivity)
             lifecycleScope.launch { notifyPage() }
+        }
+
+        /** Water reminders, shown by the system even when the app is closed. */
+        @JavascriptInterface
+        fun waterRemindersOn(): Boolean = WaterReminder.enabled(this@MainActivity) && WaterReminder.canNotify(this@MainActivity)
+
+        @JavascriptInterface
+        fun enableWaterReminders() {
+            runOnUiThread {
+                if (WaterReminder.canNotify(this@MainActivity)) { WaterReminder.enable(this@MainActivity); notifyWater() }
+                else notifyPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        @JavascriptInterface
+        fun disableWaterReminders() { WaterReminder.disable(this@MainActivity); notifyWater() }
+
+        @JavascriptInterface
+        fun setWater(date: String, waterMl: Int, goalMl: Int, lang: String) {
+            WaterReminder.setState(this@MainActivity, date, waterMl, goalMl, lang)
         }
 
         @JavascriptInterface

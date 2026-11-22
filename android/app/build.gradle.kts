@@ -9,7 +9,7 @@ val keyPassword: String? = System.getenv("NM_KEY_PASSWORD")
 
 android {
     namespace = "app.nextme.android"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.nextme.android"

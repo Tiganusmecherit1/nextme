@@ -2,7 +2,7 @@
 // Based on: ACSM Position Stand "Progression models in resistance training" (2009),
 // ACSM Guidelines for Exercise Testing & Prescription (11th ed.), WHO 2020 physical activity guidelines,
 // Schoenfeld et al. 2017 (weekly sets dose-response), ACSM/AHA 2007 older adults recommendations.
-import { EXERCISES, type Exercise, type Slot, MACHINES } from './data/exercises';
+import { EXERCISES, HOLDS, type Exercise, type Slot, MACHINES } from './data/exercises';
 import { ageOf, type Profile } from './calc';
 
 export interface Prescribed {
@@ -100,9 +100,9 @@ function pick(slot: Slot, p: Profile, avail: Set<string>, used: Set<string>, var
 export function prescription(p: Profile, ex: Exercise): { sets: number; reps: string; restSec: number } {
   const older = ageOf(p) >= 60 || programOf(p).older === true;
   const lvl = levelNum(p);
-  const timed = ex.slot === 'core' || ex.slot === 'balance' || ex.id === 'wall_sit';
+  const timed = ex.slot === 'core' || ex.slot === 'balance' || HOLDS.has(ex.id);
   if (timed) {
-    const rep = ex.slot === 'balance' ? '20–30 s' : ex.anim === 'plank' || ex.anim === 'sideplank' || ex.id === 'wall_sit' || ex.id === 'hollow_hold' ? (lvl === 1 ? '20–30 s' : '30–45 s') : '8–12';
+    const rep = ex.slot === 'balance' ? '20–30 s' : ex.anim === 'plank' || ex.anim === 'sideplank' || HOLDS.has(ex.id) ? (lvl === 1 ? '20–30 s' : '30–45 s') : '8–12';
     return { sets: lvl === 1 ? 2 : 3, reps: rep, restSec: 45 };
   }
   if (older) return { sets: 2, reps: '10–15', restSec: 75 };

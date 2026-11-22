@@ -42,7 +42,15 @@ export interface Profile {
    * Undefined for profiles made with the old full onboarding, which already answered everything.
    */
   asked?: string[];
+  /** ingredient ids the user has at home (Meals → Pantry) */
+  pantry?: string[];
+  /** favourite library recipe ids */
+  favRecipes?: string[];
+  /** AI pantry recipes the user kept */
+  savedRecipes?: SavedRecipe[];
 }
+
+export interface SavedRecipe { title: string; min: number; items: [string, number][]; steps: string[]; lang: 'ro' | 'en' }
 
 export const ageOf = (p: Pick<Profile, 'birthYear'>) => new Date().getFullYear() - p.birthYear;
 export const ageGroup = (age: number) => (age < 30 ? '20' : age < 40 ? '30' : age < 50 ? '40' : age < 60 ? '50' : '60');

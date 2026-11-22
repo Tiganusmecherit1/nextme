@@ -15,6 +15,7 @@ import { Today } from './screens/Today';
 import { Train, ExerciseDetail } from './screens/Train';
 import { RoutinePlayer } from './screens/Move';
 import { Meals } from './screens/Meals';
+import { RecipeScreen } from './screens/Recipes';
 import { Calendar } from './screens/Calendar';
 import { Learn, LessonView, Supplements } from './screens/Learn';
 import { Progress } from './screens/Progress';
@@ -78,7 +79,8 @@ function Shell() {
     case 'move': screen = <Train key="quick" section="quick" />; break; // old link
     case 'exercise': screen = <ExerciseDetail id={arg} />; break;
     case 'routine': screen = <RoutinePlayer key={arg} id={arg} />; break;
-    case 'meals': screen = <Meals />; break;
+    case 'meals': screen = <Meals key={arg || 'today'} section={arg} />; break;
+    case 'recipe': screen = <RecipeScreen key={arg} id={arg} />; break;
     case 'calendar': screen = <Calendar />; break;
     case 'learn': screen = <Learn />; break;
     case 'lesson': screen = <LessonView id={arg} />; break;
@@ -97,7 +99,7 @@ function Shell() {
   // Which tab a screen belongs to
   const TAB_OF: Record<string, string> = {
     train: 'train', move: 'train', exercise: 'train', workout: 'train', library: 'train', routine: 'train', timer: 'train', bio: 'train',
-    meals: 'meals',
+    meals: 'meals', recipe: 'meals',
     progress: 'progress', checkin: 'progress', calendar: 'progress',
     learn: 'learn', lesson: 'learn', supplements: 'learn', biohack: 'learn',
   };

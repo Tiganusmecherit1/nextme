@@ -7,8 +7,30 @@ import { dayPlan, shoppingList, sumN, type PlannedMeal } from '../meals';
 import { ING } from '../data/foods';
 import { api, ApiError, fileToDataUrl, type FoodEntry } from '../api';
 import { EditSheet } from './Profile';
+import { Pantry, RecipeLibrary } from './Recipes';
 
-export function Meals() {
+export function Meals({ section = 'today' }: { section?: string }) {
+  const ro = getLang() === 'ro';
+  const segs: [string, string, string][] = [
+    ['today', '#/meals', ro ? 'Azi' : 'Today'],
+    ['recipes', '#/meals/recipes', ro ? 'Rețete' : 'Recipes'],
+    ['pantry', '#/meals/pantry', ro ? 'Din cămară' : 'Pantry'],
+  ];
+  const cur = segs.some(([k]) => k === section) ? section : 'today';
+  return (
+    <div className="page">
+      <Header title={t('meals')} />
+      <div className="segmented" role="tablist">
+        {segs.map(([k, href, label]) => (
+          <button key={k} role="tab" aria-selected={cur === k} className={cur === k ? 'on' : ''} onClick={() => location.replace(href)}>{label}</button>
+        ))}
+      </div>
+      {cur === 'recipes' ? <><RecipeLibrary /><Disclaimer /></> : cur === 'pantry' ? <><Pantry /><Disclaimer /></> : <MealsToday />}
+    </div>
+  );
+}
+
+function MealsToday() {
   const s = useStore();
   const today = todayStr();
   const d = s.day(today);
@@ -23,8 +45,8 @@ export function Meals() {
   const addFoods = (items: FoodEntry[]) => s.patchDay(today, { foods: [...d.foods, ...items] });
 
   return (
-    <div className="page">
-      <Header title={t('meals')} right={<button className="btn sm ghost" onClick={() => setShopOpen(true)}>🛒</button>} />
+    <>
+      <div className="row-end"><button className="btn sm ghost" onClick={() => setShopOpen(true)}>🛒 {t('shopping')}</button></div>
       {s.profile.asked && !s.profile.asked.includes('diet') && (
         <button className="card list-item warn-soft" onClick={() => setDietOpen(true)}>
           <span className="emoji">🥗</span>
@@ -62,6 +84,11 @@ export function Meals() {
           <p className="small muted">{m.n.kcal} kcal · P {m.n.protein} g · C {m.n.carbs} g · G {m.n.fat} g{m.recipe.gutFriendly ? ` · 🦠 ${t('gutFriendly')}` : ''}</p>
         </button>
       ))}
+      <button className="card list-item" onClick={() => location.replace('#/meals/pantry')}>
+        <span className="emoji">🧺</span>
+        <div><b>{lang === 'ro' ? 'Ce gătesc din ce am acum?' : 'What can I cook with what I have?'}</b><p className="small muted">{lang === 'ro' ? 'Bifează ce ai în bucătărie: rețete proteice din bibliotecă + idei noi de la AI.' : 'Tick what’s in your kitchen: high-protein library recipes plus new AI ideas.'}</p></div>
+        <span className="chev">›</span>
+      </button>
       <Disclaimer />
 
       {openMeal && (
@@ -81,7 +108,7 @@ export function Meals() {
           ))}</ul>
         </Sheet>
       )}
-    </div>
+    </>
   );
 }
 

@@ -288,3 +288,43 @@ code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 6px; 
 .code { background: rgba(255,255,255,.06); padding: 10px 12px; border-radius: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
 .steps-list { margin: 12px 0 8px; padding-left: 20px; display: grid; gap: 8px; line-height: 1.45; }
 .tag-ro { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: rgba(255,255,255,.1); color: var(--muted, #aaa); vertical-align: middle; }
+
+/* Program + guided workout */
+.program-card h2 { margin: 2px 0 10px; }
+.weeks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 8px; }
+.weeks .wk { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); }
+.weeks .wk.past { background: var(--violet); opacity: .6; }
+.weeks .wk.now { background: var(--coral); }
+.weeks .wk.deload:not(.now):not(.past) { background: rgba(47,208,255,.35); }
+.ex-row-wrap { display: flex; align-items: center; gap: 6px; }
+.ex-row-wrap .ex-row { flex: 1; min-width: 0; }
+.swap-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--card2, rgba(255,255,255,.08)); font-size: 18px; flex: none; }
+.ex-row.sel { outline: 2px solid var(--coral); border-radius: 14px; }
+.workout .figure-card { display: grid; place-items: center; }
+.workout .target { font-size: 18px; margin: 10px 0 4px; }
+.workout .tip { color: var(--coral2, #ff8a65); }
+.cues-box summary { cursor: pointer; color: var(--violet); margin: 6px 0; }
+.set-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.set-card .steppers { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 8px 0 14px; }
+.stepper { display: grid; gap: 4px; justify-items: center; }
+.stepper .row { gap: 6px; }
+.input.num { width: 76px; text-align: center; font-size: 22px; font-weight: 800; padding: 8px 4px; }
+.rest-card { text-align: center; }
+.rest-time { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0 12px; text-align: center; }
+.center-row { justify-content: center; margin-bottom: 10px; }
+.timer-steppers { grid-template-columns: 1fr 1fr !important; }
+.num-val { min-width: 64px; text-align: center; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.chips.wrap { flex-wrap: wrap; }
+.timer-face { position: relative; width: min(78vw, 320px); margin: 8px auto 16px; aspect-ratio: 1; }
+.timer-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-ring circle { fill: none; stroke-width: 12; }
+.timer-ring .trk { stroke: rgba(255,255,255,.1); }
+.timer-ring .val { stroke: var(--coral); stroke-linecap: round; transition: stroke-dashoffset .1s linear; }
+.ph-rest .timer-ring .val { stroke: var(--water); }
+.ph-prep .timer-ring .val { stroke: var(--violet); }
+.timer-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.timer-phase { font-weight: 800; letter-spacing: .12em; color: var(--coral); }
+.ph-rest .timer-phase { color: var(--water); }
+.ph-prep .timer-phase { color: var(--violet); }
+.timer-left { font-size: 72px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 6px 0; }
+.timer-ex { display: flex; align-items: center; gap: 12px; }

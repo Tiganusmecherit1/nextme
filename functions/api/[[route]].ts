@@ -389,7 +389,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
 
     if (path === '/account' && method === 'DELETE') {
       await env.DB.batch(
-        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage', 'checkins', 'sync_steps'].map((t) =>
+        ['sessions', 'profiles', 'daily_logs', 'measurements', 'events', 'ai_usage', 'checkins', 'sync_steps', 'workout_sets'].map((t) =>
           env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(user.id)
         ).concat([env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id)])
       );
@@ -467,6 +467,48 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
         .bind(user.id, DATE_RE.test(b.date) ? b.date : todayUTC(), Math.max(0, Math.min(520, Math.round(Number(b.week) || 0))), JSON.stringify(answers))
         .run();
       return json({ ok: true });
+    }
+
+    // Guided workout: save all sets of one session and mark the day as trained
+    if (path === '/workouts' && method === 'POST') {
+      const b = await readJson<any>(request);
+      const date = DATE_RE.test(b.date) ? b.date : todayUTC();
+      const key = String(b.session_key || '').slice(0, 40);
+      const sets = (Array.isArray(b.sets) ? b.sets : []).slice(0, 120).map((x: any) => ({
+        ex: String(x.ex || '').replace(/[^a-z0-9_]/g, '').slice(0, 40),
+        set: Math.max(1, Math.min(20, Math.round(Number(x.set) || 1))),
+        kg: x.kg === null || x.kg === undefined || x.kg === '' ? null : Math.max(0, Math.min(500, Math.round(Number(x.kg) * 4) / 4)),
+        reps: Math.max(0, Math.min(600, Math.round(Number(x.reps) || 0))),
+      })).filter((x: any) => x.ex && x.reps > 0);
+      if (!key || !sets.length) return err('empty');
+      const mins = Math.max(1, Math.min(300, Math.round(Number(b.minutes) || 0)));
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM workout_sets WHERE user_id = ? AND date = ? AND session_key = ?').bind(user.id, date, key),
+        ...sets.map((x: any) => env.DB.prepare('INSERT INTO workout_sets (user_id, date, session_key, exercise_id, set_no, kg, reps) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(user.id, date, key, x.ex, x.set, x.kg, x.reps)),
+        env.DB.prepare('INSERT INTO daily_logs (user_id, date, workout_done, workout_minutes) VALUES (?, ?, 1, ?) ON CONFLICT(user_id, date) DO UPDATE SET workout_done = 1, workout_minutes = MAX(workout_minutes, excluded.workout_minutes)')
+          .bind(user.id, date, mins),
+      ]);
+      return json({ ok: true, saved: sets.length });
+    }
+    // Last logged session per exercise (for progression suggestions)
+    if (path === '/sets/last' && method === 'GET') {
+      const r = await env.DB.prepare(
+        `SELECT s.exercise_id, s.date, s.set_no, s.kg, s.reps FROM workout_sets s
+         JOIN (SELECT exercise_id, MAX(date) AS d FROM workout_sets WHERE user_id = ? GROUP BY exercise_id) m
+           ON m.exercise_id = s.exercise_id AND m.d = s.date
+         WHERE s.user_id = ? ORDER BY s.exercise_id, s.set_no`
+      ).bind(user.id, user.id).all<any>();
+      const byEx: Record<string, { date: string; sets: { kg: number | null; reps: number }[] }> = {};
+      for (const x of r.results || []) (byEx[x.exercise_id] ??= { date: x.date, sets: [] }).sets.push({ kg: x.kg, reps: x.reps });
+      return json({ byEx });
+    }
+    // Full history of one exercise
+    const histMatch = path.match(/^\/sets\/([a-z0-9_]{1,40})$/);
+    if (histMatch && method === 'GET') {
+      const r = await env.DB.prepare('SELECT date, set_no, kg, reps FROM workout_sets WHERE user_id = ? AND exercise_id = ? ORDER BY date, set_no LIMIT 2000')
+        .bind(user.id, histMatch[1]).all<any>();
+      return json({ items: r.results || [] });
     }
 
     if (path === '/events' && method === 'GET') {

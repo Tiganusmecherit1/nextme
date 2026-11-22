@@ -144,7 +144,7 @@ export function Today() {
         {session ? (<>
           <h2>{L(session.title)}</h2>
           <p className="muted">{session.exercises.length} {getLang() === 'ro' ? 'exerciții' : 'exercises'} · ~{session.estMinutes} {t('minutes')}</p>
-          {d.workout_done ? <p className="ok">✓ {t('workoutDone')}</p> : <button className="btn">{t('start')}</button>}
+          {d.workout_done ? <p className="ok">✓ {t('workoutDone')}</p> : <button className="btn" onClick={(e) => { e.stopPropagation(); go('#/workout/' + session.key); }}>▶ {t('start')}</button>}
         </>) : (<>
           <h2>{t('restDay')}</h2>
           <p className="muted">{t('restDayText')}</p>

@@ -5,3 +5,7 @@ dist
 *.log
 *.tsbuildinfo
 worker/assets.gen.ts
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

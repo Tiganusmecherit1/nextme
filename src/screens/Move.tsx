@@ -15,6 +15,11 @@ export function Move() {
     <div className="page">
       <Header title={t('move')} />
       <p className="muted">{t('quickMovesText')}</p>
+      <button className="card list-item hero-link" onClick={() => go('#/timer')}>
+        <span className="emoji">⏱️</span>
+        <div><b>{getLang() === 'ro' ? 'Cronometru interval' : 'Interval timer'}</b><p className="small muted">{getLang() === 'ro' ? 'Planșe, Tabata: lucru / pauză / runde' : 'Planks, Tabata: work / rest / rounds'}</p></div>
+        <span className="chev">›</span>
+      </button>
       <div className="tiles">
         {snacks.map((r) => (
           <button key={r.id} className="card tile routine-tile" onClick={() => go('#/routine/' + r.id)}>

@@ -29,6 +29,10 @@ export interface Profile {
   sleepHours: number;
   disclaimerAccepted: boolean;
   createdAt: string;
+  /** start of the current 8-week program (defaults to createdAt) */
+  programStart?: string;
+  /** permanent exercise swaps: original exercise id → replacement id */
+  swaps?: Record<string, string>;
 }
 
 export const ageOf = (p: Pick<Profile, 'birthYear'>) => new Date().getFullYear() - p.birthYear;

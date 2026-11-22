@@ -82,7 +82,7 @@ export function prescription(p: Profile, ex: Exercise): { sets: number; reps: st
   const lvl = levelNum(p);
   const timed = ex.slot === 'core' || ex.slot === 'balance' || ex.id === 'wall_sit';
   if (timed) {
-    const rep = ex.slot === 'balance' ? '20–30 s' : ex.anim === 'plank' || ex.anim === 'sideplank' || ex.id === 'wall_sit' ? (lvl === 1 ? '20–30 s' : '30–45 s') : '8–12';
+    const rep = ex.slot === 'balance' ? '20–30 s' : ex.anim === 'plank' || ex.anim === 'sideplank' || ex.id === 'wall_sit' || ex.id === 'hollow_hold' ? (lvl === 1 ? '20–30 s' : '30–45 s') : '8–12';
     return { sets: lvl === 1 ? 2 : 3, reps: rep, restSec: 45 };
   }
   if (older) return { sets: 2, reps: '10–15', restSec: 75 };
@@ -100,7 +100,78 @@ export function prescription(p: Profile, ex: Exercise): { sets: number; reps: st
   }
 }
 
-export function buildPlan(p: Profile): Session[] {
+/* ---------- 8-week program ----------
+ * ACSM 2009 recommends periodised programs: start with an adaptation period, build volume, then raise
+ * intensity, and plan lighter recovery weeks. The 8th week is a lighter (deload) week: half the sets, same weights. */
+export type Phase = 'adapt' | 'build' | 'intense' | 'deload';
+export const PHASE_INFO: Record<Phase, { name: { ro: string; en: string }; text: { ro: string; en: string } }> = {
+  adapt: { name: { ro: 'Adaptare', en: 'Adaptation' }, text: { ro: 'Înveți mișcările. Alege greutăți cu care ai mai putea face încă 3 repetări.', en: 'Learn the movements. Pick weights that leave about 3 reps in the tank.' } },
+  build: { name: { ro: 'Construire', en: 'Build' }, text: { ro: 'Volum complet. Când faci toate repetările, crești greutatea data viitoare.', en: 'Full volume. When you hit all reps, add weight next time.' } },
+  intense: { name: { ro: 'Intensificare', en: 'Intensify' }, text: { ro: 'Mai puține repetări, greutăți mai mari la exercițiile de bază.', en: 'Fewer reps, heavier weights on the main lifts.' } },
+  deload: { name: { ro: 'Săptămână ușoară', en: 'Deload week' }, text: { ro: 'Jumătate din serii, aceleași greutăți. Corpul se reface și apoi începe un ciclu nou.', en: 'Half the sets, same weights. Your body recovers, then a new cycle starts.' } },
+};
+export const PROGRAM_WEEKS = 8;
+export function programWeek(p: Profile, date = new Date()): { week: number; cycle: number; phase: Phase } {
+  const start = new Date((p.programStart || p.createdAt) + 'T00:00:00');
+  const days = Math.max(0, Math.floor((date.getTime() - start.getTime()) / 864e5));
+  const w = Math.floor(days / 7);
+  const week = (w % PROGRAM_WEEKS) + 1;
+  const phase: Phase = week <= 2 ? 'adapt' : week <= 5 ? 'build' : week <= 7 ? 'intense' : 'deload';
+  return { week, cycle: Math.floor(w / PROGRAM_WEEKS) + 1, phase };
+}
+const MAIN = ['squat', 'hinge', 'push_h', 'pull_v', 'pull_h', 'push_v'];
+function applyPhase(rx: { sets: number; reps: string; restSec: number }, ex: Exercise, phase: Phase, p: Profile) {
+  const timed = /s$/.test(rx.reps);
+  if (phase === 'adapt') return { ...rx, sets: Math.max(2, rx.sets - (rx.sets >= 3 ? 1 : 0)) };
+  if (phase === 'deload') return { ...rx, sets: Math.max(1, Math.ceil(rx.sets / 2)) };
+  if (phase === 'intense' && !timed && ageOf(p) < 60 && MAIN.includes(ex.slot) && ['muscle', 'bodybuilding', 'strength_home'].includes(p.goal)) {
+    const m = rx.reps.match(/^(\d+)–(\d+)$/);
+    const reps = m ? `${Math.max(4, +m[1] - 2)}–${Math.max(6, +m[2] - 2)}` : rx.reps;
+    return { sets: Math.min(5, rx.sets + 1), reps, restSec: rx.restSec + 30 };
+  }
+  return rx;
+}
+
+/** Same-movement alternatives the user can do with their equipment and injuries. */
+export function alternatives(p: Profile, ex: Exercise): Exercise[] {
+  const avail = availableEquipment(p);
+  const lvl = levelNum(p);
+  return EXERCISES.filter((e) => e.id !== ex.id && e.slot === ex.slot && e.level <= Math.min(3, lvl + 1) &&
+    e.equip.every((q) => avail.has(q)) && !e.avoid.some((a) => p.injuries.includes(a)));
+}
+
+/* ---------- Progression (ACSM 2009: when 1–2 reps above the target range are done, add ~2–10% load) ---------- */
+export interface Suggestion { kg: number | null; reps: number; note: { ro: string; en: string } | null }
+const range = (reps: string) => { const m = reps.match(/(\d+)\D+(\d+)/); return m ? [+m[1], +m[2]] : [+reps || 10, +reps || 10]; };
+const stepFor = (ex: Exercise) => ex.equip.includes('dumbbells') ? 2 : ex.equip.includes('kettlebell') ? 4 : ex.equip.includes('barbell') || ex.equip.includes('smith_machine') ? 2.5 : 2.5;
+export function suggest(p: Profile, ex: Exercise, rx: Prescribed | { sets: number; reps: string }, last?: { kg: number | null; reps: number }[]): Suggestion {
+  const [lo, hi] = range(rx.reps);
+  const bodyweight = ex.equip.every((q) => q === 'none' || q === 'band');
+  if (!last?.length) return { kg: null, reps: hi, note: null };
+  const lastKg = last.reduce((m, x) => Math.max(m, x.kg ?? 0), 0) || null;
+  const allTop = last.length >= Math.min(rx.sets, 2) && last.every((x) => x.reps >= hi);
+  const missed = last.some((x) => x.reps < lo);
+  if (bodyweight || lastKg === null) {
+    if (allTop) {
+      const harder = alternatives(p, ex).find((e) => e.level > ex.level);
+      return { kg: null, reps: hi, note: harder
+        ? { ro: `Ai făcut toate repetările. Poți trece la: ${harder.name.ro}.`, en: `You hit all reps. You can move up to: ${harder.name.en}.` }
+        : { ro: 'Ai făcut toate repetările: mergi mai lent (3 s la coborâre) sau adaugă o serie.', en: 'You hit all reps: slow down (3 s lowering) or add a set.' } };
+    }
+    const best = Math.max(...last.map((x) => x.reps));
+    return { kg: null, reps: Math.min(hi, best + 1), note: { ro: `Data trecută: ${best} repetări. Încearcă ${Math.min(hi, best + 1)}.`, en: `Last time: ${best} reps. Try ${Math.min(hi, best + 1)}.` } };
+  }
+  if (allTop) {
+    const next = Math.round((lastKg + stepFor(ex)) * 4) / 4;
+    return { kg: next, reps: lo, note: { ro: `Ai făcut toate repetările cu ${lastKg} kg → azi ${next} kg.`, en: `You hit all reps at ${lastKg} kg → today ${next} kg.` } };
+  }
+  if (missed) return { kg: lastKg, reps: lo, note: { ro: `Rămâi la ${lastKg} kg până faci toate repetările.`, en: `Stay at ${lastKg} kg until you hit all reps.` } };
+  const best = Math.max(...last.map((x) => x.reps));
+  return { kg: lastKg, reps: Math.min(hi, best + 1), note: { ro: `${lastKg} kg, încearcă cu o repetare în plus.`, en: `${lastKg} kg, aim for one more rep.` } };
+}
+
+export function buildPlan(p: Profile, date = new Date()): Session[] {
+  const { phase } = programWeek(p, date);
   const days = Math.max(1, p.trainingDays.length || 3);
   const split = splitFor(days);
   const avail = availableEquipment(p);
@@ -118,12 +189,15 @@ export function buildPlan(p: Profile): Session[] {
     const slots = [...tpl.slots];
     if (older && !slots.includes('balance')) slots.splice(Math.min(4, slots.length), 0, 'balance');
     for (const slot of slots) {
-      const e = pick(slot, p, avail, used, i);
-      if (!e) continue;
-      const rx = prescription(p, e);
+      const picked = pick(slot, p, avail, used, i);
+      if (!picked) continue;
+      const sw = p.swaps?.[picked.id];
+      const e = (sw && EXERCISES.find((x) => x.id === sw && x.equip.every((q) => avail.has(q)))) || picked;
+      const rx = applyPhase(prescription(p, e), e, phase, p);
       const per = rx.sets * (0.75 + rx.restSec / 60) + 1;
       if (minutes + per > budget && list.length >= 3) break;
       used.add(e.id);
+      used.add(picked.id);
       list.push({ ex: e, ...rx });
       minutes += per;
     }

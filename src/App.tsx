@@ -1,4 +1,6 @@
 import { SyncScreen } from './screens/Sync';
+import { WorkoutPlayer } from './screens/Workout';
+import { IntervalTimer } from './screens/Timer';
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import type { Profile } from './calc';
@@ -83,9 +85,11 @@ function Shell({ onRedo }: { onRedo: () => void }) {
     case 'profile': screen = <ProfileScreen onRedo={onRedo} />; break;
     case 'checkin': screen = <CheckIn />; break;
     case 'sync': screen = <SyncScreen />; break;
+    case 'workout': screen = <WorkoutPlayer sessKey={arg} />; break;
+    case 'timer': screen = <IntervalTimer />; break;
     default: screen = <Today />;
   }
-  const tab = ['train', 'exercise'].includes(route) ? 'train' : ['move', 'routine'].includes(route) ? 'move' : route === 'meals' ? 'meals'
+  const tab = ['train', 'exercise', 'workout'].includes(route) ? 'train' : ['move', 'routine', 'timer'].includes(route) ? 'move' : route === 'meals' ? 'meals'
     : ['learn', 'lesson', 'supplements'].includes(route) ? 'learn' : 'today';
   const tabs: [string, string, string][] = [
     ['today', '◎', t('today')], ['train', '🏋', t('train')], ['move', '⚡', t('move')], ['meals', '🍽', t('meals')], ['learn', '📚', t('learn')],

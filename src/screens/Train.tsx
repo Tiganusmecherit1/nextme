@@ -5,7 +5,9 @@ import { getLang, L, t } from '../i18n';
 import { Chips, Disclaimer, go, Header, Sheet } from '../components/ui';
 import { Figure } from '../components/Figure';
 import { exById, MACHINES } from '../data/exercises';
-import { sessionForDate, type Session } from '../plan';
+import { PHASE_INFO, PROGRAM_WEEKS, programWeek, sessionForDate, type Session } from '../plan';
+import { SwapSheet, useLastSets } from './Workout';
+import type { Exercise } from '../data/exercises';
 import { api, ApiError, fileToDataUrl } from '../api';
 
 const DOW = () => (getLang() === 'ro' ? ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
@@ -22,7 +24,8 @@ export function Train() {
   return (
     <div className="page">
       <Header title={t('train')} right={s.profile.location === 'gym' && <button className="btn sm ghost" onClick={() => setGymOpen(true)}>🏋️ {t('myGym')}</button>} />
-      <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location })}</p>
+      <ProgramCard />
+      <p className="muted">{t('weeklyPlan')} · {s.profile.trainingDays.length}× {s.profile.sessionMinutes} min · {L({ ro: s.profile.location === 'gym' ? 'sală' : 'acasă', en: s.profile.location === 'gym' ? 'gym' : 'home' })}</p>
 
       {s.plan.map((sess, i) => (
         <SessionCard key={sess.key} sess={sess} dayLabel={DOW()[days[i % Math.max(1, days.length)]] ?? ''}
@@ -40,7 +43,31 @@ export function Train() {
   );
 }
 
+function ProgramCard() {
+  const s = useStore();
+  const ro = getLang() === 'ro';
+  const pw = programWeek(s.profile);
+  const info = PHASE_INFO[pw.phase];
+  return (
+    <section className="card program-card">
+      <p className="eyebrow">{ro ? `Programul tău · ciclul ${pw.cycle}` : `Your program · cycle ${pw.cycle}`}</p>
+      <h2>{ro ? `Săptămâna ${pw.week} din ${PROGRAM_WEEKS}` : `Week ${pw.week} of ${PROGRAM_WEEKS}`} · {L(info.name)}</h2>
+      <div className="weeks">{Array.from({ length: PROGRAM_WEEKS }, (_, i) => <span key={i} className={'wk' + (i + 1 < pw.week ? ' past' : i + 1 === pw.week ? ' now' : '') + (i + 1 === PROGRAM_WEEKS ? ' deload' : '')} />)}</div>
+      <p className="small muted">{L(info.text)}</p>
+    </section>
+  );
+}
+
 function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: { sess: Session; dayLabel: string; isToday: boolean; open: boolean; onToggle: () => void; done: boolean; onDone: () => void }) {
+  const s = useStore();
+  const last = useLastSets();
+  const [swap, setSwap] = useState<Exercise | null>(null);
+  const doSwap = async (e: Exercise) => {
+    // map back to the originally generated exercise so the swap survives plan rebuilds
+    const orig = Object.entries(s.profile.swaps || {}).find(([, v]) => v === swap!.id)?.[0] ?? swap!.id;
+    await s.saveProfile({ ...s.profile, swaps: { ...(s.profile.swaps || {}), [orig]: e.id } });
+    setSwap(null);
+  };
   return (
     <section className={'card session' + (isToday ? ' today' : '')}>
       <button className="session-head" onClick={onToggle}>
@@ -54,19 +81,28 @@ function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: 
       {open && (
         <div className="ex-list">
           <div className="ex-row warm"><span>🔥</span><div><b>{t('warmup')}</b><p className="small muted">{sess.warmupMin} {t('warmupText')}</p></div></div>
-          {sess.exercises.map((p, i) => (
-            <button key={i} className="ex-row" onClick={() => go('#/exercise/' + p.ex.id)}>
-              <Figure anim={p.ex.anim} prop={p.ex.prop} size={64} playing={false} />
-              <div>
-                <b>{L(p.ex.name)}</b>
-                <p className="small muted">{p.sets} {t('sets')} × {p.reps} · {t('rest')} {p.restSec}s</p>
+          {sess.exercises.map((p, i) => {
+            const l = last?.[p.ex.id]?.sets;
+            const top = l?.reduce((m, x) => Math.max(m, x.kg ?? 0), 0);
+            return (
+              <div key={i} className="ex-row-wrap">
+                <button className="ex-row" onClick={() => go('#/exercise/' + p.ex.id)}>
+                  <Figure anim={p.ex.anim} prop={p.ex.prop} size={64} playing={false} />
+                  <div>
+                    <b>{L(p.ex.name)}</b>
+                    <p className="small muted">{p.sets} {t('sets')} × {p.reps} · {t('rest')} {p.restSec}s{top ? ` · ${getLang() === 'ro' ? 'ultima' : 'last'} ${top} kg` : ''}</p>
+                  </div>
+                </button>
+                <button className="swap-btn" aria-label={getLang() === 'ro' ? 'Înlocuiește' : 'Swap'} onClick={() => setSwap(p.ex)}>⇄</button>
               </div>
-            </button>
-          ))}
+            );
+          })}
           {sess.finisher && <div className="ex-row warm"><span>⚡</span><div><b>{t('finisher')}</b><p className="small muted">{L(sess.finisher)}</p></div></div>}
-          {isToday && (done ? <p className="ok center">✓ {t('workoutDone')}</p> : <button className="btn full" onClick={onDone}>{t('markDone')}</button>)}
+          {done ? <p className="ok center">✓ {t('workoutDone')}</p> : <button className="btn full" onClick={() => go('#/workout/' + sess.key)}>▶ {getLang() === 'ro' ? 'Începe antrenamentul ghidat' : 'Start guided workout'}</button>}
+          {isToday && !done && <button className="link" onClick={onDone}>{getLang() === 'ro' ? 'Bifează fără să notezi seriile' : 'Mark done without logging sets'}</button>}
         </div>
       )}
+      {swap && <SwapSheet current={swap} permanentOnly onClose={() => setSwap(null)} onPick={(e) => doSwap(e)} />}
     </section>
   );
 }

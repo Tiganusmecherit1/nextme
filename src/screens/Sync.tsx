@@ -30,7 +30,7 @@ const GUIDE: Record<Dev, { ro: string[]; en: string[] }> = {
   },
   android: {
     ro: [
-      '**NextMe nu apare în lista Health Connect** și nici nu are cum: e o aplicație web, iar Health Connect acceptă doar aplicații instalate din magazin. De aceea folosim o aplicație-punte care citește din Health Connect și trimite la NextMe.',
+      'Site-ul NextMe nu apare în Health Connect, doar aplicația NextMe pentru Android (mai sus). Dacă nu vrei aplicația, poți folosi o aplicație-punte care citește din Health Connect și trimite la NextMe.',
       'Verifică întâi că aplicația ceasului sau a telefonului scrie în Health Connect: în Samsung Health, Fitbit, Google Fit, Withings etc. caută în setări „Health Connect” și activează Pași și Puls.',
       'Instalează puntea **Health Connect Webhook** (dezvoltator Naveen MC). În Google Play costă o singură dată ~15 $. Gratuit: descarcă APK-ul din pagina proiectului pe GitHub (mcnaveen/health-connect-webhook → Releases).',
       'Deschide-o și dă-i permisiune de citire pentru **Pași**, **Puls** și **Puls în repaus**.',
@@ -38,7 +38,7 @@ const GUIDE: Record<Dev, { ro: string[]; en: string[] }> = {
       'Alege sincronizare la interval (de exemplu **la fiecare oră**) sau la ore fixe, apoi apasă **Sync Now** o dată ca să testezi.',
     ],
     en: [
-      '**NextMe will not show up in Health Connect**, and it can’t: it is a web app, and Health Connect only accepts apps installed from the store. So we use a bridge app that reads Health Connect and sends to NextMe.',
+      'The NextMe website can’t show up in Health Connect, only the NextMe Android app (above) can. If you’d rather not install it, use a bridge app that reads Health Connect and sends to NextMe.',
       'First check that your watch or phone app writes to Health Connect: in Samsung Health, Fitbit, Google Fit, Withings etc. look for “Health Connect” in settings and turn on Steps and Heart rate.',
       'Install the bridge **Health Connect Webhook** (developer Naveen MC). On Google Play it is a one-time ~$15. Free: download the APK from the project’s GitHub page (mcnaveen/health-connect-webhook → Releases).',
       'Open it and give it read access to **Steps**, **Heart rate** and **Resting heart rate**.',
@@ -50,6 +50,95 @@ const GUIDE: Record<Dev, { ro: string[]; en: string[] }> = {
 
 const md = (s: string) => s.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((p, i) =>
   p.startsWith('**') ? <b key={i}>{p.slice(2, -2)}</b> : p.startsWith('`') ? <code key={i}>{p.slice(1, -1)}</code> : p);
+
+// Native NextMe Android app (android/): exposes window.NextMeAndroid and fires 'nextme-health' events.
+interface Bridge { status(): void; connect(url: string): void; syncNow(): void; disconnect(): void; openHealthConnect(): void }
+interface NativeStatus { version: string; available: number; connected: boolean; granted: string[]; background: boolean; lastResult: string; lastAt: number }
+const bridge = (): Bridge | undefined => (window as any).NextMeAndroid;
+export const inAndroidApp = () => !!bridge();
+export const APK_URL = 'https://github.com/Tiganusmecherit1/nextme/releases/latest/download/NextMe.apk';
+
+function AndroidAppCard() {
+  const ro = getLang() === 'ro';
+  const [st, setSt] = useState<NativeStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => { setSt((e as CustomEvent<NativeStatus>).detail); setBusy(false); };
+    window.addEventListener('nextme-health', on);
+    bridge()?.status();
+    return () => window.removeEventListener('nextme-health', on);
+  }, []);
+  const connect = async () => {
+    setBusy(true);
+    try {
+      const r = await api<{ url: string }>('/sync/token', { method: 'POST' });
+      bridge()?.connect(r.url);
+    } catch { setBusy(false); }
+  };
+  const disconnect = async () => {
+    await api('/sync/token', { method: 'DELETE' }).catch(() => {});
+    bridge()?.disconnect();
+  };
+  const R: Record<string, [string, string]> = {
+    ok: ['✓ Sincronizat', '✓ Synced'], no_permission: ['Lipsește permisiunea pentru Pași în Health Connect.', 'Steps permission is missing in Health Connect.'],
+    unavailable: ['Health Connect nu e instalat sau trebuie actualizat.', 'Health Connect is missing or needs an update.'],
+    revoked: ['Legătura a fost oprită. Apasă din nou pe Conectează.', 'The connection was turned off. Tap Connect again.'],
+  };
+  const res = st?.lastResult ? (R[st.lastResult]?.[ro ? 0 : 1] ?? (ro ? 'Eroare: ' : 'Error: ') + st.lastResult.replace(/^error:/, '')) : '';
+  const when = st?.lastAt ? new Date(st.lastAt).toLocaleString(ro ? 'ro-RO' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  const has = (k: string) => st?.granted.some((g) => g.toUpperCase().includes(k)) ?? false;
+  return (
+    <section className="card">
+      <h3>❤️ Health Connect</h3>
+      <p className="small muted">{ro
+        ? 'Aplicația NextMe citește direct din Health Connect pașii și pulsul de pe telefon și de pe ceas (Samsung, Pixel, Fitbit, Garmin, Xiaomi, Withings…), când o deschizi și o dată pe oră în fundal.'
+        : 'The NextMe app reads steps and heart rate from your phone and watch (Samsung, Pixel, Fitbit, Garmin, Xiaomi, Withings…) straight from Health Connect, when you open it and hourly in the background.'}</p>
+      {!st ? <p className="muted small">…</p> : st.available === 1 ? (
+        <>
+          <p className="warn">⚠︎ {ro ? 'Telefonul nu are Health Connect.' : 'This phone doesn’t have Health Connect.'}</p>
+          <button className="btn sm" onClick={() => bridge()?.openHealthConnect()}>{ro ? 'Instalează Health Connect' : 'Install Health Connect'}</button>
+        </>
+      ) : st.connected ? (
+        <>
+          <p className="ok">✓ {ro ? 'Conectat' : 'Connected'}{when ? ` · ${when}` : ''}</p>
+          {res && <p className="small">{res}</p>}
+          <p className="small muted">{has('STEPS') ? '✓' : '✗'} {ro ? 'Pași' : 'Steps'} · {has('HEART_RATE') ? '✓' : '✗'} {ro ? 'Puls' : 'Heart rate'} · {st.background ? '✓' : '✗'} {ro ? 'în fundal' : 'in background'}</p>
+          {!st.background && <p className="small muted">{ro ? 'Fără permisiunea „în fundal”, pașii se actualizează când deschizi aplicația.' : 'Without the “background” permission, steps update when you open the app.'}</p>}
+          <div className="row gap-s">
+            <button className="btn sm" disabled={busy} onClick={() => { setBusy(true); bridge()?.syncNow(); }}>{ro ? 'Sincronizează acum' : 'Sync now'}</button>
+            <button className="btn sm ghost" onClick={() => bridge()?.openHealthConnect()}>{ro ? 'Permisiuni' : 'Permissions'}</button>
+          </div>
+          <button className="link danger" onClick={disconnect}>{ro ? 'Deconectează' : 'Disconnect'}</button>
+        </>
+      ) : (
+        <>
+          <button className="btn full" disabled={busy} onClick={connect}>{ro ? 'Conectează Health Connect' : 'Connect Health Connect'}</button>
+          <p className="small muted">{ro ? 'Bifează Pași, Puls și „Acces în fundal” în ecranul care apare.' : 'Tick Steps, Heart rate and “Background access” on the screen that opens.'}</p>
+        </>
+      )}
+      <p className="small muted">{ro ? 'Dacă ceasul nu apare, activează Health Connect în aplicația lui (Samsung Health, Fitbit, Garmin Connect etc.).' : 'If your watch doesn’t show up, turn on Health Connect in its own app (Samsung Health, Fitbit, Garmin Connect etc.).'}</p>
+    </section>
+  );
+}
+
+function GetAndroidApp() {
+  const ro = getLang() === 'ro';
+  return (
+    <section className="card accent-violet">
+      <h3>🤖 {ro ? 'Aplicația NextMe pentru Android' : 'NextMe app for Android'}</h3>
+      <p className="small">{ro
+        ? 'Pe Android, aplicația NextMe ia singură pașii și pulsul din Health Connect. Nu ai nevoie de nicio altă aplicație și nici de link.'
+        : 'On Android, the NextMe app takes steps and heart rate from Health Connect by itself. No other app or link needed.'}</p>
+      <ol className="steps-list">
+        <li>{ro ? 'Apasă butonul de mai jos și descarcă NextMe.apk.' : 'Tap the button below and download NextMe.apk.'}</li>
+        <li>{ro ? 'Deschide fișierul. Android îți cere o dată să permiți instalarea din browser: apasă Setări → Permite, apoi Instalează.' : 'Open the file. Android asks once to allow installs from your browser: tap Settings → Allow, then Install.'}</li>
+        <li>{ro ? 'Deschide NextMe, intră în cont, apoi Profil → Ceas și telefon → Conectează Health Connect.' : 'Open NextMe, log in, then Profile → Watch & phone → Connect Health Connect.'}</li>
+      </ol>
+      <a className="btn full" href={APK_URL}>{ro ? '⬇︎ Descarcă aplicația Android' : '⬇︎ Download the Android app'}</a>
+      <p className="small muted">{ro ? 'Aplicația nu e (încă) în Google Play, de aceea Android cere confirmarea. Contul și datele rămân aceleași.' : 'The app isn’t on Google Play (yet), which is why Android asks. Your account and data stay the same.'}</p>
+    </section>
+  );
+}
 
 export function SyncScreen() {
   const ro = getLang() === 'ro';
@@ -89,6 +178,8 @@ export function SyncScreen() {
   return (
     <div className="page">
       <Header title={ro ? 'Ceas și telefon' : 'Watch & phone'} back />
+      {inAndroidApp() ? <><AndroidAppCard /><Disclaimer /></> : <>
+      {dev === 'android' && <GetAndroidApp />}
       <section className="card">
         <h3>⌚ {ro ? 'Pași și puls, automat' : 'Steps and heart rate, automatically'}</h3>
         <p className="small muted">{ro
@@ -112,6 +203,7 @@ export function SyncScreen() {
 
       <section className="card">
         <Chips options={[{ v: 'ios', label: 'iPhone / Apple Watch' }, { v: 'android', label: 'Android' }]} value={dev} onChange={(v: Dev) => setDev(v)} />
+        {dev === 'android' && <p className="small"><b>{ro ? 'Alternativă fără aplicația NextMe:' : 'Alternative without the NextMe app:'}</b></p>}
         <ol className="steps-list">{GUIDE[dev][lang].map((x, i) => <li key={dev + i}>{md(x)}</li>)}</ol>
         {dev === 'ios'
           ? <p className="small muted">{ro
@@ -130,6 +222,7 @@ export function SyncScreen() {
         <p className="small muted">{ro ? 'Data e opțională (implicit azi). Trimiterea înlocuiește totalul zilei.' : 'Date is optional (defaults to today). Each send replaces that day’s total.'}</p>
       </section>
       <Disclaimer />
+      </>}
     </div>
   );
 }

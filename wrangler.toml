@@ -15,4 +15,5 @@ binding = "AI"
 [vars]
 # Free daily photo analyses per user (plate + gym machine combined)
 AI_DAILY_LIMIT = "5"
+AI_MACHINE_LIMIT = "30"
 VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct"

@@ -3,6 +3,7 @@ interface Env {
   DB: D1Database;
   AI?: Ai;
   AI_DAILY_LIMIT?: string;
+  AI_MACHINE_LIMIT?: string;
   VISION_MODEL?: string;
 }
 
@@ -122,9 +123,11 @@ function extractJson(text: string): any {
   }
 }
 
-async function consumeAiQuota(env: Env, userId: number) {
-  const limit = parseInt(env.AI_DAILY_LIMIT || '5', 10);
-  const date = todayUTC();
+// Plate photos and gym-machine scans have separate daily quotas: setting up a gym means many photos at once.
+// Machine scans are counted in the same table under a "gym:" date key (no schema change).
+async function consumeAiQuota(env: Env, userId: number, kind: 'plate' | 'machine' = 'plate') {
+  const limit = kind === 'machine' ? parseInt(env.AI_MACHINE_LIMIT || '30', 10) : parseInt(env.AI_DAILY_LIMIT || '5', 10);
+  const date = (kind === 'machine' ? 'gym:' : '') + todayUTC();
   const row = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(userId, date).first<{ count: number }>();
   const used = row?.count ?? 0;
   if (used >= limit) return { ok: false, used, limit };
@@ -353,11 +356,13 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     if (path === '/me' && method === 'GET') {
       const prof = await env.DB.prepare('SELECT data FROM profiles WHERE user_id = ?').bind(user.id).first<{ data: string }>();
       const ai = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, todayUTC()).first<{ count: number }>();
+      const gym = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND date = ?').bind(user.id, 'gym:' + todayUTC()).first<{ count: number }>();
       const sync = await env.DB.prepare('SELECT sync_token_hash IS NOT NULL AS on_, last_sync_at FROM users WHERE id = ?').bind(user.id).first<{ on_: number; last_sync_at: string | null }>();
       return json({
         user: { username: user.username, icsToken: user.ics_token },
         profile: prof ? JSON.parse(prof.data) : null,
         ai: { used: ai?.count ?? 0, limit: parseInt(env.AI_DAILY_LIMIT || '5', 10) },
+        aiGym: { used: gym?.count ?? 0, limit: parseInt(env.AI_MACHINE_LIMIT || '30', 10) },
         sync: { enabled: !!sync?.on_, lastAt: sync?.last_sync_at ? sync.last_sync_at.replace(' ', 'T') + 'Z' : null },
       });
     }
@@ -535,7 +540,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
       const image = String(b.image || '');
       if (!/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 1_400_000) return err('bad_image');
       if (!env.AI) return err('ai_unavailable', 503);
-      const q = await consumeAiQuota(env, user.id);
+      const q = await consumeAiQuota(env, user.id, path === '/ai/machine' ? 'machine' : 'plate');
       if (!q.ok) return json({ error: 'limit_reached', used: q.used, limit: q.limit }, 429);
       const ro = b.lang !== 'en';
       if (path === '/ai/plate') {

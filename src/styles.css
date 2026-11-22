@@ -420,3 +420,11 @@ button.rings-row { width: 100%; text-align: left; }
 .pr-row.four { grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .pr-row.four b { font-size: 18px; }
 main:has(+ .fab) { padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 84px); }
+.scan-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.scan-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14.5px; }
+.chip.sm { padding: 5px 10px; font-size: 13px; }
+.link.inline { width: auto; padding: 0 0 0 8px; }
+.gym-preview { margin-top: 12px; }
+.gp-day { padding: 8px 0; border-top: 0.5px solid var(--line); }
+.gp-day:first-of-type { border-top: 0; }
+.gp-day p { margin: 0 0 2px; }

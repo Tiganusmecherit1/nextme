@@ -27,6 +27,7 @@ export function QuickAdd() {
     ['⚖️', ro ? 'Greutate' : 'Weight', () => setMode('weight')],
     ['📸', ro ? 'Poză farfurie' : 'Plate photo', () => setMode('photo')],
     ['🏃', ro ? 'Altă activitate' : 'Other activity', () => setMode('activity')],
+    ['⏱', 'Tabata', () => { setMode(null); go('#/timer/tabata'); }],
     ['🍽', ro ? 'Masă din plan' : 'Planned meal', () => { setMode(null); go('#/meals'); }],
   ];
 

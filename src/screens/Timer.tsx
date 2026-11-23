@@ -21,21 +21,28 @@ const PRESETS: { label: string; work: number; rest: number; rounds: number }[] =
 // Exercises that suit a timed interval: planks, holds, bodyweight core.
 const TIMED = EXERCISES.filter((e) => e.slot === 'core' && e.equip.every((q) => q === 'none') || ['wall_sit', 'glute_bridge', 'bw_squat', 'single_leg_stand'].includes(e.id));
 const KEY = 'nm_timer_cfg';
-const load = (): Cfg => { try { return { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return DEFAULT; } };
+// Simple Tabata opened from the quick-log "+" menu: only work / rest / rounds, its own saved settings.
+const TABATA: Cfg = { work: 20, rest: 10, rounds: 6, prep: 10, exIds: [] };
+const TABATA_KEY = 'nm_tabata_cfg';
+const load = (simple: boolean): Cfg => {
+  const base = simple ? TABATA : DEFAULT;
+  try { return { ...base, ...JSON.parse(localStorage.getItem(simple ? TABATA_KEY : KEY) || '{}'), ...(simple ? { exIds: [] } : {}) }; } catch { return base; }
+};
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
 type Phase = 'prep' | 'work' | 'rest' | 'done';
 
-export function IntervalTimer() {
+export function IntervalTimer({ simple = false }: { simple?: boolean }) {
   const s = useStore();
   const ro = getLang() === 'ro';
-  const [cfg, setCfg] = useState<Cfg>(load);
+  const title = simple ? 'Tabata' : (ro ? 'Cronometru interval' : 'Interval timer');
+  const [cfg, setCfg] = useState<Cfg>(() => load(simple));
   const [run, setRun] = useState<null | { phase: Phase; round: number; endsAt: number; pausedLeft: number | null }>(null);
   const [now, setNow] = useState(Date.now());
   const release = useRef<() => void>(() => {});
   const lastBeep = useRef<number>(-1);
 
-  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch { /* ignore */ } }, [cfg]);
+  useEffect(() => { try { localStorage.setItem(simple ? TABATA_KEY : KEY, JSON.stringify(cfg)); } catch { /* ignore */ } }, [cfg, simple]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 100); return () => { clearInterval(t); release.current(); }; }, []);
 
   const left = run ? (run.pausedLeft ?? Math.ceil((run.endsAt - now) / 1000)) : 0;
@@ -85,7 +92,7 @@ export function IntervalTimer() {
     const pct = run.phase === 'done' ? 1 : 1 - Math.max(0, left) / Math.max(1, dur);
     return (
       <div className={'page timer-run ph-' + run.phase}>
-        <Header title={ro ? 'Cronometru interval' : 'Interval timer'} />
+        <Header title={title} />
         <div className="timer-face">
           <svg viewBox="0 0 200 200" className="timer-ring" aria-hidden="true">
             <circle cx="100" cy="100" r="90" className="trk" />
@@ -125,11 +132,35 @@ export function IntervalTimer() {
       </div>
     </div>
   );
+  if (simple) {
+    const big = (k: 'work' | 'rest' | 'rounds', step: number, min: number, max: number, label: string, unit: string) => (
+      <div className="tabata-row">
+        <span className="tabata-label">{label}</span>
+        <button className="tabata-btn" aria-label={`${label} −${step}`} disabled={cfg[k] <= min} onClick={() => setCfg({ ...cfg, [k]: Math.max(min, cfg[k] - step) })}>−</button>
+        <span className="tabata-val">{cfg[k]}<small>{unit}</small></span>
+        <button className="tabata-btn" aria-label={`${label} +${step}`} disabled={cfg[k] >= max} onClick={() => setCfg({ ...cfg, [k]: Math.min(max, cfg[k] + step) })}>+</button>
+      </div>
+    );
+    return (
+      <div className="page">
+        <Header title={title} back />
+        <section className="card tabata-card">
+          {big('work', 5, 5, 300, ro ? 'Exercițiu' : 'Work', ' s')}
+          {big('rest', 5, 5, 300, ro ? 'Pauză' : 'Rest', ' s')}
+          {big('rounds', 1, 1, 12, ro ? 'Runde' : 'Rounds', '')}
+          <p className="small muted center">{ro ? 'Durată totală' : 'Total time'}: {fmt(total)} · {ro ? `începe după ${cfg.prep} s` : `starts after ${cfg.prep} s`}</p>
+          <button className="btn full tabata-start" onClick={start}>▶ {ro ? 'Pornește' : 'Start'}</button>
+          <button className="btn ghost full sm" onClick={() => setCfg({ ...TABATA })}>{ro ? 'Clasic 20/10 × 6' : 'Classic 20/10 × 6'}</button>
+        </section>
+        <Disclaimer />
+      </div>
+    );
+  }
   const toggleEx = (id: string) => setCfg({ ...cfg, exIds: cfg.exIds.includes(id) ? cfg.exIds.filter((x) => x !== id) : [...cfg.exIds, id] });
 
   return (
     <div className="page">
-      <Header title={ro ? 'Cronometru interval' : 'Interval timer'} back />
+      <Header title={title} back />
       <section className="card">
         <p className="small muted">{ro ? 'Pentru planșe, Tabata sau orice exercițiu pe timp. Sună și vibrează la 3-2-1 și la schimbarea fazei; ecranul rămâne aprins.' : 'For planks, Tabata or any timed exercise. Beeps and vibrates at 3-2-1 and on each phase change; the screen stays on.'}</p>
         <div className="chips scroll-x">

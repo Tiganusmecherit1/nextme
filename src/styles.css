@@ -313,6 +313,16 @@ code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 6px; 
 .rest-time { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0 12px; text-align: center; }
 .center-row { justify-content: center; margin-bottom: 10px; }
 .timer-steppers { grid-template-columns: 1fr 1fr !important; }
+/* Simple Tabata (quick-log "+" menu): big −/+ buttons, 5 s steps */
+.tabata-card { display: grid; gap: 14px; }
+.tabata-row { display: grid; grid-template-columns: 1fr 56px 96px 56px; align-items: center; gap: 8px; }
+.tabata-label { font-weight: 700; font-size: 17px; }
+.tabata-btn { width: 56px; height: 56px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--card2, rgba(255,255,255,.08)); font-size: 30px; font-weight: 700; line-height: 1; color: inherit; }
+.tabata-btn:active { transform: scale(.94); }
+.tabata-btn:disabled { opacity: .35; }
+.tabata-val { text-align: center; font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tabata-val small { font-size: 16px; font-weight: 600; opacity: .7; margin-left: 2px; }
+.tabata-start { font-size: 18px; padding: 16px; }
 .num-val { min-width: 64px; text-align: center; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .chips.wrap { flex-wrap: wrap; }
 .timer-face { position: relative; width: min(78vw, 320px); margin: 8px auto 16px; aspect-ratio: 1; }

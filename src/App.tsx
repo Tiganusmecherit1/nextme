@@ -90,7 +90,7 @@ function Shell() {
     case 'checkin': screen = <CheckIn />; break;
     case 'sync': screen = <SyncScreen />; break;
     case 'workout': screen = <WorkoutPlayer sessKey={arg} />; break;
-    case 'timer': screen = <IntervalTimer />; break;
+    case 'timer': screen = <IntervalTimer key={arg || 'full'} simple={arg === 'tabata'} />; break;
     case 'library': screen = <Library />; break;
     case 'biohack': screen = <Biohack />; break;
     case 'bio': screen = <BioWorkoutPlayer key={arg} id={arg} />; break;

@@ -18,6 +18,8 @@ export interface Spec {
   a: Key; b: Key; front?: boolean; /** front view rotated by t (top-down lying figures, side plank) */ flat?: boolean; scene?: Shape[]; props?: Prop[];
   /** which phase (0 = a, 1 = b) is shown when not animating */
   still?: number; dur?: number; floor?: boolean; shadow?: number; ghost?: boolean;
+  /** -1 = lying face up (flips the chest/face side); focus = highlighted muscles override */
+  face?: number; focus?: ('thigh' | 'ham' | 'glute' | 'chest' | 'back' | 'core' | 'shoulder' | 'uarm' | 'calf')[];
 }
 
 export const FIGS: Record<string, Spec> = {};
@@ -542,3 +544,8 @@ const ALIAS: Record<string, string> = {
   balance: 'supported_balance', fly: 'cable_fly', legpress: 'leg_press', stepup: 'step_up', sideplank: 'side_plank', twist: 'seated_twist',
 };
 for (const [k2, v] of Object.entries(ALIAS)) if (!FIGS[k2]) FIGS[k2] = FIGS[v];
+
+// figures lying face up with the head to the right / reclined on a bench: flip the chest & face side
+for (const id of ['db_bench', 'bb_bench', 'close_grip_bench', 'smith_bench', 'db_incline_bench', 'bb_incline_bench', 'db_floor_press', 'db_pullover',
+  'skull_crusher', 'table_row', 'smith_inverted_row', 'dead_bug', 'hollow_hold', 'crunch', 'reverse_crunch', 'bicycle_crunch', 'heel_taps',
+  'lying_leg_raise', 'flutter_kicks', 'knees_to_chest']) FIGS[id].face = -1;

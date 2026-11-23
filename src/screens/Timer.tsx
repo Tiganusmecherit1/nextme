@@ -97,7 +97,7 @@ export function IntervalTimer() {
         </div>
         {ex && run.phase !== 'done' && (
           <section className="card timer-ex">
-            <Figure anim={ex.anim} prop={ex.prop} size={90} playing={run.phase === 'work'} />
+            <Figure id={ex.id} anim={ex.anim} size={90} playing={run.phase === 'work'} />
             <div><p className="small muted">{run.phase === 'work' ? (ro ? 'Acum' : 'Now') : (ro ? 'Urmează' : 'Next')}</p><b>{L(ex.name)}</b></div>
           </section>
         )}

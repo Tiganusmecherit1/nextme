@@ -112,7 +112,7 @@ function SessionCard({ sess, dayLabel, isToday, open, onToggle, done, onDone }: 
             return (
               <div key={i} className="ex-row-wrap">
                 <button className="ex-row" onClick={() => go('#/exercise/' + p.ex.id)}>
-                  <Figure anim={p.ex.anim} prop={p.ex.prop} size={64} playing={false} />
+                  <Figure id={p.ex.id} anim={p.ex.anim} size={64} playing={false} />
                   <div>
                     <b>{L(p.ex.name)}</b>
                     <p className="small muted">{p.sets} {t('sets')} × {p.reps} · {t('rest')} {p.restSec}s{top ? ` · ${getLang() === 'ro' ? 'ultima' : 'last'} ${top} kg` : ''}</p>
@@ -156,7 +156,7 @@ export function ExerciseDetail({ id }: { id: string }) {
   return (
     <div className="page">
       <Header title={L(ex.name)} back />
-      <section className="card figure-card"><Figure anim={ex.anim} prop={ex.prop} size={240} /></section>
+      <section className="card figure-card"><Figure id={ex.id} anim={ex.anim} size={240} /></section>
       <section className="card">
         <p className="eyebrow">{L(ex.muscles)}</p>
         <ol className="cues">{L(ex.cues).map((c, i) => <li key={i}>{c}</li>)}</ol>

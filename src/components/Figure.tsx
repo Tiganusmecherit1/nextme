@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
+import { cloneElement, useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import type { Anim } from '../data/exercises';
 import { FIGS, type Key, type Limb, type Prop, type Shape, type Spec, type V } from './figures';
 import { EXERCISES, type Slot } from '../data/exercises';
@@ -148,11 +148,11 @@ function pose(spec: Spec, t: number): Body {
 const f1 = (n: number) => Math.round(n * 10) / 10;
 const pts = (ps: V[]) => ps.map((p, i) => `${i ? 'L' : 'M'}${f1(p[0])} ${f1(p[1])}`).join('');
 
-const STEEL = '#c7c9d1';
-const STEEL_D = '#7c7f8a';
-const FRAME = '#4c4c55';
-const FRAME_L = '#6c6c76';
-const PAD = '#5f5f69';
+const STEEL = '#b9bcc6';
+const STEEL_D = '#6f7280';
+const FRAME = '#3a3a42';
+const FRAME_L = '#55555f';
+const PAD = '#46454f';
 
 function shape(s: Shape, i: number) {
   const [k, ...v] = s;
@@ -328,18 +328,18 @@ function focusMarks(b: Body, f: Focus[], uid: string) {
       continue;
     }
     switch (x) {
-      case 'thigh': out.push(<path key={out.length} d={cap(b.ln[0], b.ln[1], 5.4, 4)} />); break;
-      case 'ham': out.push(<path key={out.length} d={cap(b.ln[0], b.ln[1], 5.4, 4)} />); break;
-      case 'calf': out.push(<path key={out.length} d={cap(b.ln[1], b.ln[2], 4.2, 2.6)} />); break;
-      case 'uarm': out.push(<path key={out.length} d={cap(b.an[0], b.an[1], 3.8, 3)} />); break;
-      case 'shoulder': out.push(<circle key={out.length} cx={b.S[0]} cy={b.S[1]} r={3.6} />); break;
-      case 'glute': { const g: V = [b.H[0] - b.n[0] * 2.4, b.H[1] - b.n[1] * 2.4]; out.push(<circle key={out.length} cx={g[0]} cy={g[1]} r={3.6} />); break; }
-      case 'chest': out.push(tor(0.6, 0.85, 2.6, 4.2)); break;
-      case 'back': out.push(tor(0.45, 0.85, -2.6, 4.2)); break;
-      case 'core': out.push(tor(0.15, 0.5, 2.2, 4.2)); break;
+      case 'thigh': out.push(<path key={out.length} d={cap(lerpV(b.ln[0], b.ln[1], 0.12), lerpV(b.ln[0], b.ln[1], 0.88), 9, 7)} />); break;
+      case 'ham': out.push(<path key={out.length} d={cap(lerpV(b.ln[0], b.ln[1], 0.12), lerpV(b.ln[0], b.ln[1], 0.88), 9, 7)} />); break;
+      case 'calf': out.push(<path key={out.length} d={cap(lerpV(b.ln[1], b.ln[2], 0.15), lerpV(b.ln[1], b.ln[2], 0.75), 7, 5)} />); break;
+      case 'uarm': out.push(<path key={out.length} d={cap(lerpV(b.an[0], b.an[1], 0.18), lerpV(b.an[0], b.an[1], 0.85), 7, 6)} />); break;
+      case 'shoulder': out.push(<circle key={out.length} cx={b.S[0]} cy={b.S[1]} r={4.6} />); break;
+      case 'glute': { const g: V = [b.H[0] - b.n[0] * 2.4, b.H[1] - b.n[1] * 2.4]; out.push(<circle key={out.length} cx={g[0]} cy={g[1]} r={5.6} />); break; }
+      case 'chest': out.push(tor(0.58, 0.88, 3.4, 6.5)); break;
+      case 'back': out.push(tor(0.4, 0.88, -3.4, 6.5)); break;
+      case 'core': out.push(tor(0.12, 0.55, 2.4, 7)); break;
     }
   }
-  return <g fill="#ffe3d8" fillOpacity={0.55} filter={`url(#gl${uid})`}>{out}</g>;
+  return <g fill={`url(#mg${uid})`} fillOpacity={0.95} filter={`url(#gl${uid})`}>{out}</g>;
 }
 
 /** motion arrow following the joint that travels the most between the two phases */
@@ -361,7 +361,7 @@ function motionArrow(spec: Spec, uid: string) {
   if ((mid[0] - c[0]) * n[0] + (mid[1] - c[1]) * n[1] < 0) n = [-n[0], -n[1]];
   const off = 6.5;
   const q = ps.map((p) => [p[0] + n[0] * off, p[1] + n[1] * off] as V);
-  return <path d={pts(q)} fill="none" stroke="#fff" strokeOpacity={0.75} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2.2 1.8" markerEnd={`url(#ah${uid})`} />;
+  return <path d={pts(q)} fill="none" stroke="#ff6a5c" strokeOpacity={0.9} strokeWidth={0.9} strokeLinecap="round" strokeLinejoin="round" markerEnd={`url(#ah${uid})`} />;
 }
 
 /** timing: hold on the start, move, hold on the end, move back */
@@ -407,50 +407,46 @@ export function Figure({ id, anim, size = 160, playing = true, T }: {
   const showGhost = T === undefined && !playing && size >= 120 && spec.ghost !== false;
   const g = showGhost ? pose(spec, 1 - (spec.still ?? 1)) : null;
   const focus = spec.focus ?? (SLOT_OF[key] ? SLOT_FOCUS[SLOT_OF[key]] : ROUTINE_FOCUS[key] ?? []);
-  const FAR = '#6a4cc9';
+  const FAR = `url(#ff${uid})`;
 
-  const limb = (body: Body, which: 'an' | 'af' | 'ln' | 'lf', fill: string, op = 1) => {
+  // every body part as flat shapes (so the same list can also build the clip path)
+  const limbShapes = (body: Body, which: 'an' | 'af' | 'ln' | 'lf', fill: string, k: string): ReactElement[] => {
     const ps = body[which];
-    const isArm = which[0] === 'a';
-    if (isArm) {
-      return (
-        <g fill={fill} fillOpacity={op}>
-          <path d={cap(ps[0], ps[1], 5.8, 4.6)} />
-          <path d={cap(ps[1], ps[2], 4.6, 3.6)} />
-          <circle cx={f1(ps[2][0])} cy={f1(ps[2][1])} r={2.5} />
-        </g>
-      );
+    if (which[0] === 'a') {
+      return [
+        <path key={k + 'u'} d={cap(ps[0], ps[1], 5, 3.9)} fill={fill} />,
+        <path key={k + 'f'} d={cap(ps[1], ps[2], 3.9, 3)} fill={fill} />,
+        <circle key={k + 'h'} cx={f1(ps[2][0])} cy={f1(ps[2][1])} r={2.1} fill={fill} />,
+      ];
     }
-    // foot: from a heel point just behind the ankle to the toe
     const fd: V = [ps[3][0] - ps[2][0], ps[3][1] - ps[2][1]];
-    const heel: V = [ps[2][0] - fd[0] * 0.22, ps[2][1] - fd[1] * 0.22];
-    return (
-      <g fill={fill} fillOpacity={op}>
-        <path d={cap(ps[0], ps[1], 8, 6.2)} />
-        <path d={cap(ps[1], ps[2], 6.2, 4.2)} />
-        <path d={cap(heel, ps[3], 4, 2.8)} />
-      </g>
-    );
+    const heel: V = [ps[2][0] - fd[0] * 0.2, ps[2][1] - fd[1] * 0.2];
+    return [
+      <path key={k + 't'} d={cap(ps[0], ps[1], 7.2, 5.4)} fill={fill} />,
+      <path key={k + 's'} d={cap(ps[1], ps[2], 5.4, 3.4)} fill={fill} />,
+      <path key={k + 'f'} d={cap(heel, ps[3], 3.4, 2.2)} fill={fill} />,
+    ];
   };
-  const torso = (body: Body, fill: string) => body.front
-    ? <path d={pts([body.an[0], body.af[0], body.lf[0], body.ln[0]]) + 'Z'} fill={fill} stroke={fill} strokeWidth={4.4} strokeLinejoin="round" />
-    : <path d={torsoPath(body)} fill={fill} />;
-  const headEl = (body: Body, fill: string, face: boolean) => {
+  const torsoShape = (body: Body, fill: string, k: string) => body.front
+    ? <path key={k} d={pts([body.an[0], body.af[0], body.lf[0], body.ln[0]]) + 'Z'} fill={fill} stroke={fill} strokeWidth={4} strokeLinejoin="round" />
+    : <path key={k} d={torsoPath(body)} fill={fill} />;
+  const headShapes = (body: Body, fill: string, k: string): ReactElement[] => {
     const h = body.head;
-    if (!face || body.front) return <circle cx={f1(h[0])} cy={f1(h[1])} r={L.head} fill={fill} />;
-    const axis = perp(body.n, [0, 0]); // unused orientation helper
-    void axis;
-    const nose: V = [h[0] + body.n[0] * 4.6, h[1] + body.n[1] * 4.6];
-    const up: V = [h[0] - body.S[0], h[1] - body.S[1]]; const ul = Math.hypot(up[0], up[1]) || 1;
-    const eye: V = [h[0] + body.n[0] * 2.6 + (up[0] / ul) * 0.9, h[1] + body.n[1] * 2.6 + (up[1] / ul) * 0.9];
-    return (
-      <g>
-        <circle cx={f1(h[0])} cy={f1(h[1])} r={L.head} fill={fill} />
-        <circle cx={f1(nose[0])} cy={f1(nose[1])} r={1.5} fill={fill} />
-        <circle cx={f1(eye[0])} cy={f1(eye[1])} r={0.85} fill="#1c1c1e" fillOpacity={0.75} />
-      </g>
-    );
+    const nk = lerpV(body.S, h, 0.62);
+    const out = [
+      <path key={k + 'n'} d={cap(body.S, nk, 4, 3.2)} fill={fill} />,
+      <circle key={k + 'h'} cx={f1(h[0])} cy={f1(h[1])} r={L.head * 0.94} fill={fill} />,
+    ];
+    if (!body.front) {
+      const nose: V = [h[0] + body.n[0] * 4.7, h[1] + body.n[1] * 4.7];
+      out.push(<circle key={k + 'o'} cx={f1(nose[0])} cy={f1(nose[1])} r={1.15} fill={fill} />);
+    }
+    return out;
   };
+  const near = `url(#fg${uid})`;
+  const farParts = (body: Body, fill: string, k: string) => [...limbShapes(body, 'lf', body.front ? near : fill, k + 'lf'), ...limbShapes(body, 'af', body.front ? near : fill, k + 'af')];
+  const edge = (els: ReactElement[], on: boolean) => on ? [...els.map((e) => cloneElement(e, { key: `${e.key}o`, fill: '#141416', stroke: '#141416', strokeOpacity: 0.6, fillOpacity: 0.6, strokeWidth: 0.9 } as Record<string, unknown>)), ...els] : els;
+  const nearParts = (body: Body, fill: string, k: string, line = false) => [torsoShape(body, fill, k + 'to'), ...edge(limbShapes(body, 'ln', fill, k + 'ln'), line), ...headShapes(body, fill, k + 'hd'), ...edge(limbShapes(body, 'an', fill, k + 'an'), line)];
 
   // framing: zoom in on figure + equipment (fixed per exercise, not per frame)
   let vb = '0 0 100 100';
@@ -478,50 +474,54 @@ export function Figure({ id, anim, size = 160, playing = true, T }: {
   return (
     <svg viewBox={vb} width={size} height={size} role="img" aria-label="exercise illustration" className="figure">
       <defs>
-        <linearGradient id={`fg${uid}`} gradientUnits="userSpaceOnUse" x1="20" y1="10" x2="80" y2="95">
-          <stop offset="0" stopColor="#ff7a45" />
-          <stop offset="0.55" stopColor="#ff4f6d" />
+        <linearGradient id={`fg${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="8" x2="0" y2="94">
+          <stop offset="0" stopColor="#fbf9ff" />
+          <stop offset="1" stopColor="#cdc6dc" />
+        </linearGradient>
+        <linearGradient id={`ff${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="8" x2="0" y2="94">
+          <stop offset="0" stopColor="#7e7891" />
+          <stop offset="1" stopColor="#5c576c" />
+        </linearGradient>
+        <linearGradient id={`mg${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff8a4c" />
+          <stop offset="0.5" stopColor="#ff5470" />
           <stop offset="1" stopColor="#8b5cf6" />
         </linearGradient>
         <linearGradient id={`band${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="100">
           <stop offset="0" stopColor="#2fd0ff" />
           <stop offset="1" stopColor="#7aa8ff" />
         </linearGradient>
+        <linearGradient id={`fl${uid}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0.22" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
         <radialGradient id={`sh${uid}`}>
-          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <stop offset="0" stopColor="#000" stopOpacity="0.6" />
           <stop offset="1" stopColor="#000" stopOpacity="0" />
         </radialGradient>
-        <filter id={`gl${uid}`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.3" /></filter>
-        <marker id={`ah${uid}`} viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10Z" fill="#fff" fillOpacity={0.85} />
+        <filter id={`gl${uid}`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.7" /></filter>
+        <clipPath id={`cl${uid}`}>{[...nearParts(b, '#fff', 'c'), ...(b.front ? farParts(b, '#fff', 'cf') : [])]}</clipPath>
+        <marker id={`ah${uid}`} viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+          <path d="M1.5 1.2L7.5 5L1.5 8.8" fill="none" stroke="#ff6a5c" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
         </marker>
       </defs>
-      {spec.floor !== false && <line x1="2" y1="92.6" x2="98" y2="92.6" stroke="#4a4a50" strokeWidth="0.8" strokeLinecap="round" />}
-      {spec.floor !== false && lowest > 84 && <ellipse cx={cx} cy={92.6} rx={spec.shadow ?? 20} ry={2.2} fill={`url(#sh${uid})`} />}
+      {spec.floor !== false && <rect x="0" y="92.3" width="100" height="0.6" fill={`url(#fl${uid})`} />}
+      {spec.floor !== false && lowest > 84 && <ellipse cx={cx} cy={92.8} rx={spec.shadow ?? 20} ry={1.8} fill={`url(#sh${uid})`} />}
       {(spec.scene ?? []).map(shape)}
-      {g && (
-        <g opacity={0.18}>
-          {(['lf', 'af'] as const).map((w) => <g key={w}>{limb(g, w, '#a78bfa')}</g>)}
-          {torso(g, '#a78bfa')}
-          {(['ln', 'an'] as const).map((w) => <g key={w}>{limb(g, w, '#a78bfa')}</g>)}
-          {headEl(g, '#a78bfa', false)}
-        </g>
-      )}
+      {g && <g opacity={0.13}>{[...farParts(g, '#fff', 'g'), ...nearParts(g, '#fff', 'gn')]}</g>}
       {big && T === undefined && motionArrow(spec, uid)}
       {back.map((p, i) => prop(p, b, i, uid))}
-      {limb(b, 'lf', b.front ? `url(#fg${uid})` : FAR)}
-      {limb(b, 'af', b.front ? `url(#fg${uid})` : FAR)}
+      {farParts(b, FAR, 'f')}
       {farP.map((p, i) => prop(p, b, 100 + i, uid))}
-      {torso(b, `url(#fg${uid})`)}
-      {limb(b, 'ln', `url(#fg${uid})`)}
-      {focusMarks(b, focus, uid)}
-      {limb(b, 'an', `url(#fg${uid})`)}
-      {headEl(b, '#ff6a3d', true)}
+      {nearParts(b, near, 'n', true)}
+      <g clipPath={`url(#cl${uid})`}>{focusMarks(b, focus, uid)}</g>
       {frontP.map((p, i) => prop(p, b, 200 + i, uid))}
       {label && (
         <g>
-          <rect x={Number(vb.split(' ')[0]) + 3} y={Number(vb.split(' ')[1]) + 3} width={label.length * 2.3 + 4} height={6.4} rx={3.2} fill="#000" fillOpacity={0.45} />
-          <text x={Number(vb.split(' ')[0]) + 5} y={Number(vb.split(' ')[1]) + 7.5} fontSize={4.2} fontWeight={700} fill={st[1] === 0 ? '#ffb199' : '#c4b5fd'}>{label}</text>
+          <rect x={Number(vb.split(' ')[0]) + 3} y={Number(vb.split(' ')[1]) + 3} width={label.length * 2.2 + 5} height={6.2} rx={3.1} fill="#fff" fillOpacity={0.08} />
+          <circle cx={Number(vb.split(' ')[0]) + 6.1} cy={Number(vb.split(' ')[1]) + 6.1} r={1} fill={st[1] === 0 ? '#ff7a45' : '#8b5cf6'} />
+          <text x={Number(vb.split(' ')[0]) + 8.2} y={Number(vb.split(' ')[1]) + 7.5} fontSize={3.9} fontWeight={600} letterSpacing={0.1} fill="#fff" fillOpacity={0.82}>{label}</text>
         </g>
       )}
     </svg>

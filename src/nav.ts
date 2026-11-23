@@ -20,7 +20,8 @@ export function parentOf(hash: string): string {
   switch (route) {
     case 'workout': case 'library': return '#/train';
     case 'exercise': return '#/library';
-    case 'timer': case 'bio': return '#/train/quick';
+    case 'timer': return arg === 'tabata' ? '#/today' : '#/train/quick';
+    case 'bio': return '#/train/quick';
     case 'routine': return ROUTINES.find((r) => r.id === arg)?.kind === 'physio' ? '#/train/recovery' : '#/train/quick';
     case 'biohack': case 'lesson': case 'supplements': return '#/learn';
     case 'checkin': case 'calendar': return '#/progress';
